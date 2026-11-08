@@ -9,6 +9,8 @@ import { billsRouter } from './routes/bills.js';
 import { receiptsRouter } from './routes/receipts.js';
 import { reportsRouter } from './routes/reports.js';
 import { getPool, query } from './db.js';
+import { requirePermission } from './access.js';
+import { usersRouter } from './routes/users.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.resolve(__dirname, '..', 'dist');
@@ -46,6 +48,8 @@ app.get('/api/health', async (_req, res) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api', requireAuth);
+app.use('/api', requirePermission);
+app.use('/api/users', usersRouter);
 app.use('/api', mastersRouter);
 app.use('/api/bills', billsRouter);
 app.use('/api/receipts', receiptsRouter);

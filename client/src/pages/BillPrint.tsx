@@ -67,7 +67,7 @@ export default function BillPrint() {
             {charges.map(([k, v]) => <div key={k}><span>{sign[0]} {k}</span><span>{fmt(v)}</span></div>)}
             {deductions.map(([k, v]) => <div key={k}><span>{sign[1]} {k}</span><span>{fmt(v)}</span></div>)}
             <div className="big"><span>Bill total</span><span>{fmt(b.Gross)}</span></div>
-            <div><span>Previous balance</span><span>{fmt(num('BalAmt'))}</span></div>
+            {!b.NonBalance && <div><span>Previous balance</span><span>{fmt(num('BalAmt'))}</span></div>}
             {num('CashAmt') > 0 && <div><span>{kind.cash}</span><span>{fmt(b.CashAmt)}</span></div>}
             <div className="big"><span>Net balance</span><span>{fmt(num('NetAmt'))}</span></div>
             <div style={{ fontSize: '.85rem' }}>{rupeesInWords(b.Gross)}</div>

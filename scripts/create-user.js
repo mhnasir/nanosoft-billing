@@ -3,9 +3,13 @@
 import 'dotenv/config';
 import pg from 'pg';
 
-const [username, password] = process.argv.slice(2);
+const [username, password, role = 'owner'] = process.argv.slice(2);
+if (!['owner', 'admin', 'manager', 'pos', 'loading', 'stock'].includes(role)) {
+  console.error('Role must be one of: owner, admin, manager, pos, loading, stock');
+  process.exit(1);
+}
 if (!username || !password) {
-  console.error('Usage: npm run create-user -- <username> <password>');
+  console.error('Usage: npm run create-user -- <username> <password> [owner|admin|manager|pos|loading|stock]');
   process.exit(1);
 }
 if (username.length > 50 || password.length > 50) {
@@ -23,10 +27,10 @@ await client.connect();
 try {
   const found = await client.query('SELECT userkey FROM usermaster WHERE lower(username)=lower($1) LIMIT 1', [username]);
   if (found.rows[0]) {
-    await client.query('UPDATE usermaster SET pass=$2 WHERE userkey=$1', [found.rows[0].userkey, password]);
+    await client.query('UPDATE usermaster SET pass=$2, role=$3 WHERE userkey=$1', [found.rows[0].userkey, password, role]);
     console.log(`Password updated for user "${username}".`);
   } else {
-    await client.query('INSERT INTO usermaster(username, pass, stat) VALUES ($1,$2,0)', [username, password]);
+    await client.query('INSERT INTO usermaster(username, pass, stat, role) VALUES ($1,$2,0,$3)', [username, password, role]);
     console.log(`User "${username}" created.`);
   }
 } finally {

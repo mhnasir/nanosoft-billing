@@ -9,6 +9,7 @@ import BillList from './pages/BillList';
 import BillEditor from './pages/BillEditor';
 import BillPrint from './pages/BillPrint';
 import Receipts from './pages/Receipts';
+import Users from './pages/Users';
 import { Ledger, Outstanding, DayBook, TrialBalance } from './pages/Reports';
 
 export default function App() {
@@ -63,6 +64,7 @@ export default function App() {
   if (!user) return <Login onLogin={(u) => { setUser(u); nav('/'); }} />;
 
   const logout = () => { setToken(null); setUser(null); };
+  const can = (area: string) => !!user.perms?.[area];
   const link = (to: string, label: string) => <NavLink to={to} className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>;
 
   return (
@@ -76,31 +78,33 @@ export default function App() {
       {menu && <div className="scrim" onClick={() => setMenu(false)} />}
       <nav className={`side${menu ? ' open' : ''}`}>
         <div className="brand">NanoSoft Billing</div>
-        {link('/', 'Dashboard')}
-        <div className="grp">Transactions</div>
-        {link('/bills/B', 'Sales bills')}
-        {link('/bills/S', 'Purchase bills')}
-        {link('/receipts/R', 'Receipts')}
-        {link('/receipts/P', 'Payments')}
-        <div className="grp">Reports</div>
-        {link('/ledger', 'Party ledger')}
-        {link('/outstanding', 'Outstanding')}
-        {link('/daybook', 'Day book')}
-        {link('/trial-balance', 'Trial balance')}
-        <div className="grp">Masters</div>
-        {link('/parties', 'Customers / suppliers')}
-        {link('/products', 'Products')}
-        {link('/groups', 'Party groups')}
-        {link('/banks', 'Banks')}
-        {link('/marks', 'Marks')}
+        {can('dashboard') && link('/', 'Dashboard')}
+        {(can('sales') || can('purchase') || can('receipts')) && <div className="grp">Transactions</div>}
+        {can('sales') && link('/bills/B', 'Sales bills')}
+        {can('purchase') && link('/bills/S', 'Purchase bills')}
+        {can('receipts') && link('/receipts/R', 'Receipts')}
+        {can('receipts') && link('/receipts/P', 'Payments')}
+        {can('reports') && <div className="grp">Reports</div>}
+        {can('reports') && link('/ledger', 'Party ledger')}
+        {can('reports') && link('/outstanding', 'Outstanding')}
+        {can('reports') && link('/daybook', 'Day book')}
+        {can('reports') && link('/trial-balance', 'Trial balance')}
+        {can('masters') && <div className="grp">Masters</div>}
+        {can('masters') && link('/parties', 'Customers / suppliers')}
+        {can('masters') && link('/products', 'Products')}
+        {can('masters') && link('/groups', 'Party groups')}
+        {can('masters') && link('/banks', 'Banks')}
+        {can('masters') && link('/marks', 'Marks')}
+        {can('users') && <div className="grp">Admin</div>}
+        {can('users') && link('/users', 'Users and roles')}
         <div className="user">
-          Signed in as <b>{user.name}</b><br />
+          Signed in as <b>{user.name}</b><br /><span className="muted">{user.role}</span><br />
           <button className="sm" onClick={logout} style={{ marginTop: 6 }}>Sign out</button>
         </div>
       </nav>
       <main className="main">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={can('dashboard') ? <Dashboard /> : <Navigate to={can('sales') ? '/bills/B' : can('purchase') ? '/bills/S' : can('receipts') ? '/receipts/R' : '/parties'} />} />
           <Route path="/bills/:type" element={<BillList />} />
           <Route path="/bills/:type/new" element={<BillEditor />} />
           <Route path="/bills/:type/:id" element={<BillEditor />} />
@@ -114,6 +118,7 @@ export default function App() {
           <Route path="/products" element={<SimpleMaster kind="products" />} />
           <Route path="/groups" element={<SimpleMaster kind="groups" />} />
           <Route path="/banks" element={<SimpleMaster kind="banks" />} />
+          <Route path="/users" element={<Users me={user} />} />
           <Route path="/marks" element={<SimpleMaster kind="marks" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -27,8 +27,10 @@ export function computeTotals(b, prevBal = 0) {
   b.gross = r2(b.billType === 'B' ? b.billAmt + charges - sideAmts : b.billAmt + sideAmts - charges);
   // What the printed bill shows as the amount to settle: previous balance and this bill, less cash. For a supplier the
   // balance is stored negative when we owe them, so it is subtracted (same as the VB form).
-  b.prevBal = r2(prevBal);
-  b.netAmt = r2(b.billType === 'B' ? prevBal + b.gross - b.cashAmt : b.gross - prevBal - b.cashAmt);
+  // A "non-balance" bill (VB NonBalanceStat) shows no previous balance: it stands alone on the printout.
+  const pb = b.nonBalance ? 0 : prevBal;
+  b.prevBal = r2(pb);
+  b.netAmt = r2(b.billType === 'B' ? pb + b.gross - b.cashAmt : b.gross - pb - b.cashAmt);
   return b;
 }
 
@@ -69,6 +71,7 @@ export function parseBill(body) {
     othersAddStr: str(body.othersAddStr, 50),
     othersLessStr: str(body.othersLessStr, 50),
     lotNo: str(body.lotNo, 30),
+    nonBalance: !!body.nonBalance,
     // Header totals as the VB form saves them: Nop = total weight, InOutPur = total bags.
     nop: txt(lines.reduce((s, l) => s + l.qty, 0)),
     inOutPur: txt(lines.reduce((s, l) => s + l.nop, 0)),
@@ -132,7 +135,7 @@ function headerValues(b, billNo) {
     commissionamt: b.commissionAmt,
     englishamt: 0, // like the VB proc: the gross total goes to the ledger, Bill01.EnglishAmt stays 0
     othersaddamt: b.othersAddAmt, othersaddstr: b.othersAddStr, cashamt: b.cashAmt, dctype: b.billType === 'S' ? '3' : '1', netamt: b.netAmt, billtype: b.billType,
-    multicashstat: '', nonbalancestat: 0, inoutpur: b.inOutPur, lotno: b.lotNo, nop: b.nop, transportkey: 0,
+    multicashstat: '', nonbalancestat: b.nonBalance ? 1 : 0, inoutpur: b.inOutPur, lotno: b.lotNo, nop: b.nop, transportkey: 0,
   };
 }
 
@@ -201,7 +204,7 @@ async function loadBill(id) {
             b.billamt AS "BillAmt", b.disamt AS "DisAmt", b.otherslessamt AS "OthersLessAmt", b.otherslessstr AS "OthersLessStr",
             b.advamt AS "AdvAmt", b.coolyamt AS "CoolyAmt", b.kcoolyamt AS "KCoolyAmt", b.basketamt AS "BasketAmt", b.gunnyamt AS "GunnyAmt",
             b.commissionamt AS "CommissionAmt", b.othersaddamt AS "OthersAddAmt", b.othersaddstr AS "OthersAddStr", b.cashamt AS "CashAmt",
-            b.netamt AS "NetAmt", b.balamt AS "BalAmt", b.cooly AS "AutoCooly", b.basket AS "AutoBasket", b.gunny AS "AutoGunny", b.dctype AS "DcType", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey",
+            b.netamt AS "NetAmt", b.balamt AS "BalAmt", b.cooly AS "AutoCooly", b.basket AS "AutoBasket", b.gunny AS "AutoGunny", b.dctype AS "DcType", (b.nonbalancestat = 1) AS "NonBalance", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey",
             ${GROSS} AS "Gross", s.supname AS "SupName", s.add1 AS "Add1", s.add2 AS "Add2", s.add3 AS "Add3", s.city AS "City",
             s.pincode AS "Pincode", s.state AS "State", s.tngstno AS "TNGSTNO",
             (SELECT p.phone FROM phonemast p WHERE p.supkey=s.supkey ORDER BY p.ordkey LIMIT 1) AS "Phone"
@@ -250,7 +253,7 @@ billsRouter.post(
          VALUES(@docno,@d,@t,@s,@amt,@ref,now(),@less) RETURNING fatranskey`,
         { docno: String(billNo), d: b.billDate, t: b.billType, s: b.supKey, amt: sign * b.gross, ref: billKey, less: b.cashAmt },
       );
-      await db.query('UPDATE bill01 SET fatranskey=@f WHERE billkey=@b', { f: f[0].fatranskey, b: billKey });
+      await db.query('UPDATE bill01 SET fatranskey=@f, btob=@n WHERE billkey=@b', { f: f[0].fatranskey, b: billKey, n: b.nonBalance ? 1 : 0 });
       await insertLines(db, billKey, b);
       await refreshBalance(db, b.supKey);
       return { billKey, billNo };
@@ -275,8 +278,8 @@ billsRouter.put(
       computeTotals(b, await balanceBefore(db, b.supKey, cur[0].fatranskey));
       if (b.gross < 0) throw badReq('Total cannot be negative');
       const hv = headerValues(b, billNo);
-      // Flags this screen does not edit (non-balance, multi-cash, transport) stay as they were.
-      const KEEP = ['nonbalancestat', 'multicashstat', 'transportkey'];
+      // Flags this screen does not edit (multi-cash, transport) stay as they were.
+      const KEEP = ['multicashstat', 'transportkey'];
       const cols = HEADER_COLS.split(',').map((c) => c.trim()).filter((c) => !KEEP.includes(c));
       await db.query(`UPDATE bill01 SET ${cols.map((c) => `${c}=@${c}`).join(',')} WHERE billkey=@id`, { ...hv, id });
       const sign = b.billType === 'B' ? 1 : -1;
@@ -292,6 +295,7 @@ billsRouter.put(
         );
         await db.query('UPDATE bill01 SET fatranskey=@f WHERE billkey=@id', { f: f[0].fatranskey, id });
       }
+      await db.query('UPDATE bill01 SET btob=@n WHERE billkey=@id', { id, n: b.nonBalance ? 1 : 0 });
       await db.query('DELETE FROM bill02 WHERE billkey=@id', { id });
       await insertLines(db, id, b);
       await refreshBalance(db, b.supKey);

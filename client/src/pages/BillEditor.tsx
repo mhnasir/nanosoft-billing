@@ -29,6 +29,7 @@ export default function BillEditor() {
   const [othersLessStr, setLessStr] = useState('');
   const [cashAmt, setCash] = useState('');
   const [auto, setAuto] = useState<Record<string, boolean>>({});
+  const [nonBal, setNonBal] = useState(false);
   const [prevSaved, setPrevSaved] = useState<number | null>(null);
   const [lines, setLines] = useState<Line[]>([blankLine()]);
   const [error, setError] = useState('');
@@ -53,6 +54,7 @@ export default function BillEditor() {
     setAmts(a);
     setAuto({ autoBasket: b.AutoBasket === 'Yes', autoCooly: b.AutoCooly === 'Yes', autoGunny: b.AutoGunny === 'Yes' });
     setPrevSaved(Number(b.BalAmt) || 0);
+    setNonBal(!!b.NonBalance);
     setLines(
       (b.lines as Row[]).map((l) => ({
         prodKey: l.ProdKey, qty: String(l.Qty), unit: l.Unit || 'Kgs', nop: l.Nop ? String(l.Nop) : '', rate: String(l.Rate), marks: l.Marks || '',
@@ -88,7 +90,7 @@ export default function BillEditor() {
   const gross = r2(kind.chargesSign === 1 ? billAmt + adds - less : billAmt + less - adds);
   const party: Row | undefined = partyOpts.find((p) => p.__id === supKey);
   // Balance before this bill: a new bill uses the party's current balance, a saved one the figure stored with it.
-  const prev = r2(isNew || prevSaved === null ? Number(party?.Balance) || 0 : prevSaved);
+  const prev = nonBal ? 0 : r2(isNew || prevSaved === null ? Number(party?.Balance) || 0 : prevSaved);
   const balance = r2(type === 'B' ? prev + gross - n(cashAmt) : gross - prev - n(cashAmt));
 
   const setLine = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
@@ -98,7 +100,7 @@ export default function BillEditor() {
     setError('');
     try {
       const body = {
-        billType: type, billNo: n(billNo) || undefined, billDate, supKey, lotNo, othersAddStr, othersLessStr, cashAmt: n(cashAmt),
+        nonBalance: nonBal, billType: type, billNo: n(billNo) || undefined, billDate, supKey, lotNo, othersAddStr, othersLessStr, cashAmt: n(cashAmt),
         ...Object.fromEntries(Object.entries(amts).map(([k, v]) => [k, n(v)])),
         autoBasket: !!auto.autoBasket, autoCooly: !!auto.autoCooly, autoGunny: !!auto.autoGunny,
         lines: lines.filter((l) => l.prodKey || n(l.qty)).map((l) => ({ ...l, qty: n(l.qty), nop: n(l.nop), rate: n(l.rate) })),
@@ -191,6 +193,7 @@ export default function BillEditor() {
               })}
             </div>
             <div className="row" style={{ margin: '8px 0' }}>
+              <label className="row" style={{ gap: 6 }}><input type="checkbox" checked={nonBal} onChange={(e) => setNonBal(e.target.checked)} /> Non-balance bill (no previous balance)</label>
               {kind.autos.map(([flag, label]) => (
                 <label key={flag} className="row" style={{ gap: 6 }}><input type="checkbox" checked={!!auto[flag]} onChange={(e) => setAuto({ ...auto, [flag]: e.target.checked })} /> {label}</label>
               ))}

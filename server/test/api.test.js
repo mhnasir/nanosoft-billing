@@ -32,7 +32,7 @@ before(async () => {
   const { app } = await import('../index.js');
   server = http.createServer(app).listen(0);
   base = `http://127.0.0.1:${server.address().port}`;
-  token = jwt.sign({ id: 1, name: 'admin' }, 'test-secret');
+  token = jwt.sign({ id: 1, name: 'admin', role: 'owner', src: 'user' }, 'test-secret');
 });
 
 after(async () => {
@@ -270,12 +270,32 @@ T('purchase bill: deductions, per-day numbering; sales numbering never restarts;
   assert.equal(g.CoolyAmt, 40);
   assert.equal(g.Gross, 210); // 250 - 40
   // editing keeps the numbers and the flags this screen does not touch
-  await adminClient.query('UPDATE bill01 SET nonbalancestat=1 WHERE billkey=$1', [keyB]);
-  r = await api('PUT', `/api/bills/${keyB}`, { billType: 'S', supKey: farmer, billDate: '2026-09-10', lines: [{ prodKey: ids.prod, qty: 20, unit: 'Kgs', rate: 10 }] });
+  r = await api('PUT', `/api/bills/${keyB}`, { nonBalance: true, billType: 'S', supKey: farmer, billDate: '2026-09-10', lines: [{ prodKey: ids.prod, qty: 20, unit: 'Kgs', rate: 10 }] });
   assert.equal(r.status, 200);
   const kept = await adminClient.query('SELECT billno, nonbalancestat FROM bill01 WHERE billkey=$1', [keyB]);
   assert.equal(kept.rows[0].billno, 2);
   assert.equal(kept.rows[0].nonbalancestat, 1);
+  g = (await api('GET', `/api/bills/${keyB}`)).data;
+  assert.equal(g.NonBalance, true);
+  assert.equal(Number(g.BalAmt), 0);
+});
+
+T('roles limit what each user can do', async () => {
+  const mk = async (name, role) => { await api('POST', '/api/users', { username: name, password: 'pw12', role }); const l = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, password: 'pw12' }) }); return (await l.json()).token; };
+  const call = async (tok, m, u, b) => { const r = await fetch(`${base}${u}`, { method: m, headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : undefined }); return r.status; };
+  const pos = await mk('cashier1', 'pos');
+  const load = await mk('loader1', 'loading');
+  const mgr = await mk('mgr1', 'manager');
+  assert.equal(await call(pos, 'GET', '/api/bills?type=B'), 200);
+  assert.equal(await call(pos, 'GET', '/api/bills?type=S'), 403);
+  assert.equal(await call(pos, 'GET', '/api/reports/trial-balance'), 403);
+  assert.equal(await call(pos, 'GET', '/api/users'), 403);
+  assert.equal(await call(load, 'GET', '/api/bills?type=S'), 200);
+  assert.equal(await call(load, 'POST', '/api/bills', { billType: 'B' }), 403);
+  assert.equal(await call(load, 'GET', '/api/receipts'), 403);
+  assert.equal(await call(mgr, 'GET', '/api/reports/trial-balance'), 200);
+  assert.equal(await call(mgr, 'GET', '/api/users'), 403);
+  assert.equal(await call(token, 'GET', '/api/users'), 200);
 });
 
 T('DRY_RUN rolls bill writes back', async () => {

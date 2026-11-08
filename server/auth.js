@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Router } from 'express';
 import { query } from './db.js';
 import { HttpError, wrap, str } from './util.js';
+import { permsOf, ROLES } from './access.js';
 
 let secret = process.env.JWT_SECRET;
 if (!secret) {
@@ -41,18 +42,18 @@ authRouter.post(
     if (!username || !password) throw new HttpError(400, 'Enter user name and password');
 
     let user = null;
-    const um = await query('SELECT userkey AS id, username AS name, pass, stat AS role FROM usermaster WHERE lower(username)=lower(@u) LIMIT 1', { u: username });
-    if (um[0] && safeEq(um[0].pass ?? '', password)) user = { id: um[0].id, name: um[0].name, role: um[0].role, src: 'user' };
+    const um = await query('SELECT userkey AS id, username AS name, pass, role FROM usermaster WHERE lower(username)=lower(@u) LIMIT 1', { u: username });
+    if (um[0] && safeEq(um[0].pass ?? '', password)) user = { id: um[0].id, name: um[0].name, role: ROLES[um[0].role] ? um[0].role : 'pos', src: 'user' };
 
     if (!user) {
       const sm = await query('SELECT stfkey AS id, username AS name, password AS pass, stat AS role FROM staffmast WHERE lower(username)=lower(@u) LIMIT 1', { u: username });
-      if (sm[0] && sm[0].pass && safeEq(sm[0].pass, password)) user = { id: sm[0].id, name: sm[0].name, role: sm[0].role, src: 'staff' };
+      if (sm[0] && sm[0].pass && safeEq(sm[0].pass, password)) user = { id: sm[0].id, name: sm[0].name, role: 'pos', src: 'staff' };
     }
     if (!user) throw new HttpError(401, 'Wrong user name or password');
 
     const token = jwt.sign(user, secret, { expiresIn: `${hours}h` });
-    res.json({ token, user });
+    res.json({ token, user: { ...user, perms: permsOf(user.role) } });
   }),
 );
 
-authRouter.get('/me', requireAuth, (req, res) => res.json({ user: req.user }));
+authRouter.get('/me', requireAuth, (req, res) => res.json({ user: { ...req.user, perms: permsOf(req.user.role) } }));
