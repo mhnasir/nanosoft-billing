@@ -18,6 +18,28 @@ export function setToken(t: string | null) {
   }
 }
 
+// Address of the API server. Empty = same site (normal PC install). On Netlify it is the tunnel address of the shop PC,
+// set at build time (VITE_API_URL) or typed on the login page (kept in this browser).
+const API_KEY = 'nb_api';
+export function getApiBase(): string {
+  let v = '';
+  try {
+    v = localStorage.getItem(API_KEY) || '';
+  } catch {
+    /* storage unavailable */
+  }
+  if (!v) v = ((import.meta as any).env?.VITE_API_URL as string) || '';
+  return v.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+}
+export function setApiBase(v: string) {
+  try {
+    if (v.trim()) localStorage.setItem(API_KEY, v.trim());
+    else localStorage.removeItem(API_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 async function request<T = any>(method: string, url: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getToken();
@@ -25,7 +47,7 @@ async function request<T = any>(method: string, url: string, body?: unknown): Pr
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   let res: Response;
   try {
-    res = await fetch(`/api${url}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    res = await fetch(`${getApiBase()}/api${url}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   } catch {
     throw new Error('Cannot reach the server');
   }

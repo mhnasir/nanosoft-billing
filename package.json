@@ -16,6 +16,7 @@
     "start": "node server/index.js",
     "test": "node --test server/test/*.test.js",
     "db:init": "node scripts/db-init.js",
+    "create-user": "node scripts/create-user.js",
     "import": "node scripts/import-mssql.js",
     "compose": "docker compose up --build",
     "compose:db": "docker compose up -d db",

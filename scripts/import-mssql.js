@@ -23,7 +23,8 @@ export function readTable(file) {
   if (txt.charCodeAt(0) === 0xfeff) txt = txt.slice(1);
   const rows = txt.split(RS);
   if (rows.length && rows[rows.length - 1].replace(/[\r\n]+/g, '') === '') rows.pop();
-  return rows.map((r) => r.replace(/^[\r\n]+/, '').split(FS));
+  // SQL Server 2005 bcp writes an empty string as a single NUL char; PostgreSQL cannot store NULs, so drop them (real NULLs are the ~NULL~ marker).
+  return rows.map((r) => r.replace(/^[\r\n]+/, '').split(FS).map((f) => f.replace(/\u0000/g, '')));
 }
 
 function convert(col, v, where) {

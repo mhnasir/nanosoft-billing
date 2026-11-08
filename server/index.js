@@ -15,6 +15,24 @@ const dist = path.resolve(__dirname, '..', 'dist');
 
 export const app = express();
 app.disable('x-powered-by');
+
+// Optional CORS for a front end hosted elsewhere (e.g. Netlify). CORS_ORIGIN = comma-separated site addresses, or * for any.
+// Logins use a Bearer token (no cookies), so this only decides which sites may call the API from a browser.
+const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);
+if (corsOrigins.length) {
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && (corsOrigins.includes('*') || corsOrigins.includes(origin))) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, ngrok-skip-browser-warning');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Max-Age', '600');
+    }
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+  });
+}
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', async (_req, res) => {
