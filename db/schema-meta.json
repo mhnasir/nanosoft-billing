@@ -1,0 +1,3675 @@
+{
+ "SUPMAST": {
+  "pg": "supmast",
+  "cols": [
+   {
+    "name": "SupKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "SUPCODE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SUPNAME",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ADD1",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ADD2",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ADD3",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "city",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Pincode",
+    "pg": "varchar(8)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "state",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Country",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Countryid",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STDCODE",
+    "pg": "varchar(20)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "FAXNo",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "EMAIL",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "EMAIL1",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "WebSite",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TNGSTNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CSTNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "IACNO",
+    "pg": "varchar(20)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LICENSENO",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ICCNO",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PERTOCONT",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SUPDesc",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LOCATION",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BANKERS",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SUPTYPE",
+    "pg": "char(1)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "USERID",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AccessDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BSUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BRACSUBKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CUSTKEY",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BalanceAmt",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BalanceDate",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DatePaidAmt",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CashDate",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BalEntDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CashEntDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DoubleType",
+    "pg": "char(2)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Billkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "StandardBalance",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "NonBill",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "OpnBal",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "OpnTrBal",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "MONTHTR",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "Companykey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "PHONEMAST": {
+  "pg": "phonemast",
+  "cols": [
+   {
+    "name": "SUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PHONE",
+    "pg": "varchar(15)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OrdKey",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "CUSTTYPEMAST": {
+  "pg": "custtypemast",
+  "cols": [
+   {
+    "name": "CUSTKEY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "CUSTTYPE",
+    "pg": "varchar(30)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "GROUPKEY",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DISPLAY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "ProductMast": {
+  "pg": "productmast",
+  "cols": [
+   {
+    "name": "Prodkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ProdName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BrandName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ProdTamilName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ProdMalaName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "UNIT",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Cooly",
+    "pg": "numeric(5,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Orderkey",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Display",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "'0'"
+   },
+   {
+    "name": "CurPrice",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SlipOrderkey",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Ptype",
+    "pg": "char(10)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CalcStr",
+    "pg": "char(10)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Basket",
+    "pg": "numeric(18,0)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Gunny",
+    "pg": "numeric(18,0)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PriceOrdKey",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ProdTamil",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Stock",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RptType",
+    "pg": "char(10)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ProdNo",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "MarkMaster": {
+  "pg": "markmaster",
+  "cols": [
+   {
+    "name": "MarkKey",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Prodkey",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MarkName",
+    "pg": "varchar(15)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "BankMast": {
+  "pg": "bankmast",
+  "cols": [
+   {
+    "name": "BankKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "BankName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "OPBalance",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "CompanyMaster": {
+  "pg": "companymaster",
+  "cols": [
+   {
+    "name": "CompanyKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "CompanName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "PropName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Address",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Address1",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Phoneno",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Pass",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "USERMASTER": {
+  "pg": "usermaster",
+  "cols": [
+   {
+    "name": "USERKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "USERNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PASS",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "STAFFMAST": {
+  "pg": "staffmast",
+  "cols": [
+   {
+    "name": "STFKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "STFCODE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SURNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STFNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ADD1",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ADD2",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ADD3",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CITY",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PINCODE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STATE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PHONE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "EMAIL",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DESIGNATION",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DOJ",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "USERNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PASSWORD",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "UserDetail": {
+  "pg": "userdetail",
+  "cols": [
+   {
+    "name": "Acesskey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "StfKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AcessDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Acesstime",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Status",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Type",
+    "pg": "char(1)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "Bill01": {
+  "pg": "bill01",
+  "cols": [
+   {
+    "name": "BillKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "BillNo",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Cooly",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "Basket",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "Gunny",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "BillDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SupKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BillAmt",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DisAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "CashDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DayAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OthersLessAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "OthersLessStr",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "BasketLessAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "BalDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BalAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AdvAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "CoolyAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "KCoolyAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "BasketAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "GunnyAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "CommissionAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "EnglishAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "OthersAddAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "OthersAddStr",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "CashAmt",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "DCTYPE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "NetAmt",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BillType",
+    "pg": "char(1)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MultiCashStat",
+    "pg": "char(1)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": "''"
+   },
+   {
+    "name": "NonBalanceStat",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "BTOB",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SubBillkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "LOTNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": "''"
+   },
+   {
+    "name": "INOUTPUR",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": "''"
+   },
+   {
+    "name": "LotClear",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TotLessAmt",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Nop",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": "'0'"
+   },
+   {
+    "name": "Fatranskey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Transportkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   }
+  ]
+ },
+ "Bill02": {
+  "pg": "bill02",
+  "cols": [
+   {
+    "name": "Sal02key",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "BillKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ProdKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Qty",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Unit",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "NOP",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "RATE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Amount",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ORDKEY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "WeightTxt",
+    "pg": "varchar(250)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BSUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "OrdQty",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "LSSUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "BillDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LessStat",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "InOut",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": "'0'"
+   },
+   {
+    "name": "Marks",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "LotKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "MarksKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "CLEARSTAT",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "SubBillKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "PRate",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "PRateTot",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "BILL03": {
+  "pg": "bill03",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Bill02Key",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LSSUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "NOP",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Qty",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RATE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "REMARKS",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OrdKey",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "KeyBillKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "BILL01EXPENSES": {
+  "pg": "bill01expenses",
+  "cols": [
+   {
+    "name": "SALKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LORRYHIRE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "GUNNY",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TOAL",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "UNLOADEX",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PackCooly",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TOIN",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "VILLAGEEXP",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "GREEDING",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "WEIGHBRIDGE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "COMMISSION",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CHESSBILL",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SALES_BROKARAGE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DESPATCH_LORRYHIRE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DRAFT_TT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OTHERS",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OTHERSTXT",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OTHERS1",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OTHERSTXT1",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OTHERS2",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OTHERSTXT2",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TOTEXPNESES",
+    "pg": "numeric(18,0)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "FATRANS": {
+  "pg": "fatrans",
+  "cols": [
+   {
+    "name": "FATRANSKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "DOCNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DOCDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DOCTYPE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Supkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "AMOUNT",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "REFKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TRANSDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RECPAY02STAT",
+    "pg": "smallint",
+    "ms": "bit",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "LESS",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": "0"
+   },
+   {
+    "name": "NOTES",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": "''"
+   },
+   {
+    "name": "BTOP",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": "''"
+   }
+  ]
+ },
+ "RECPAY01": {
+  "pg": "recpay01",
+  "cols": [
+   {
+    "name": "RECPAYKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "RECPAYDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RECPAYTYPE",
+    "pg": "char(10)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "RECPAY02": {
+  "pg": "recpay02",
+  "cols": [
+   {
+    "name": "RECPAYKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RECPAY02KEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "RECDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AMOUNT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LESSAMT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "NARRATION",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CASH",
+    "pg": "varchar(20)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CREDITNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CREDITDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BankKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   },
+   {
+    "name": "BANKERS",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RecType",
+    "pg": "char(2)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Shift",
+    "pg": "char(2)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LedgerKey",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "FATRANSKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "RECPAY03": {
+  "pg": "recpay03",
+  "cols": [
+   {
+    "name": "RECPAY02KEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RECPAY03KEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BILLAMOUNT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "MAXKEYS": {
+  "pg": "maxkeys",
+  "cols": [
+   {
+    "name": "NAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MAXKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "OB": {
+  "pg": "ob",
+  "cols": [
+   {
+    "name": "OBKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "OBDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OBAMT",
+    "pg": "numeric(18,0)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "OBNETCUSTOMERS": {
+  "pg": "obnetcustomers",
+  "cols": [
+   {
+    "name": "TRANSDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CUSTKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BALANCE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "OBBALANCE": {
+  "pg": "obbalance",
+  "cols": [
+   {
+    "name": "OBKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "TRANSDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OBBALAMT",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": "0"
+   }
+  ]
+ },
+ "Former01": {
+  "pg": "former01",
+  "cols": [
+   {
+    "name": "FormerKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "SupKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "Former02": {
+  "pg": "former02",
+  "cols": [
+   {
+    "name": "FormerKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ProdKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Qty",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Unit",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "NOP",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "RATE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Amount",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ORDKEY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "WeightTxt",
+    "pg": "text",
+    "ms": "text",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BSUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "OrdQty",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LSSUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BillDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LessStat",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Inout",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "CTC",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Tk",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "PaidAmount",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AdvAmt",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AdvDate",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Paid1",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Paid1Date",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Paid2",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Paid2Date",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Paid3",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Paid3Date",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "CASHBILL01": {
+  "pg": "cashbill01",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "BILLNO",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BILLDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BILLAMT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BILLTIME",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SUPNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OOS",
+    "pg": "smallint",
+    "ms": "bit",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   }
+  ]
+ },
+ "CASHBILL02": {
+  "pg": "cashbill02",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "PRODKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "QTY",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "UNIT",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RATE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "AMOUNT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ORDKEY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "smallint",
+    "ms": "bit",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ProductPricekey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "ProductPrice": {
+  "pg": "productprice",
+  "cols": [
+   {
+    "name": "ProductPricekey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ProdKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "EntryDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "Rate",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "TmpBrandName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OrdKey",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Qty",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MarkName",
+    "pg": "char(50)",
+    "ms": "char",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   }
+  ]
+ },
+ "PRODUCTSTOCK": {
+  "pg": "productstock",
+  "cols": [
+   {
+    "name": "ProductStockKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ProductPriceKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Qty",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Stat",
+    "pg": "char(1)",
+    "ms": "char",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "PRODSTOCK": {
+  "pg": "prodstock",
+  "cols": [
+   {
+    "name": "PRODSTOCKKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PREDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PRESTKKGS",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CURDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CURKGS",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SALEKGS",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CURSTK",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MANSTK",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SHORTSTK",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "StockLedger": {
+  "pg": "stockledger",
+  "cols": [
+   {
+    "name": "StkLedgerKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "ProdKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TransDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RefKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DocType",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DocNo",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SupKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Nop",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Weight",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Amount",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LotKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Markskey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "PUREXPENSES": {
+  "pg": "purexpenses",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "FOOD",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TEA",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TELEPHONE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "COOLY",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "GUNNY",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PETROL",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CARHIRE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SALARY",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TOINE",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TRANSPORT",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BUSFAIR",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "TOTAL",
+    "pg": "numeric(10,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "PURBILL04": {
+  "pg": "purbill04",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "ORDKEY",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CULTIVATERNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MARKNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "LOTNODETAILS": {
+  "pg": "lotnodetails",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LOTNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LOTDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "LORRYNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "MIC01": {
+  "pg": "mic01",
+  "cols": [
+   {
+    "name": "MICKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MICDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MICTYPE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "USERKEY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MICFORMNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "MIC02": {
+  "pg": "mic02",
+  "cols": [
+   {
+    "name": "MICKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PREAMOUNT",
+    "pg": "numeric(18,0)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PRETYPE",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "NEWAMOUNT",
+    "pg": "numeric(18,0)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "REMARKS",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "MICREPORT": {
+  "pg": "micreport",
+  "cols": [
+   {
+    "name": "BILLKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CURAMT",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "PREVAMT",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DIFFAMT",
+    "pg": "numeric(12,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "STAT",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   }
+  ]
+ },
+ "OOS": {
+  "pg": "oos",
+  "cols": [
+   {
+    "name": "OOSDATE",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OOSDATETIME",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OOSSTAT",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "SETUP": {
+  "pg": "setup",
+  "cols": [
+   {
+    "name": "setupkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": true,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "FIELDNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "FIELD",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "CHKPASS": {
+  "pg": "chkpass",
+  "cols": [
+   {
+    "name": "EntryDate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "vFlag",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "COMPDETMAST": {
+  "pg": "compdetmast",
+  "cols": [
+   {
+    "name": "SUPKEY",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DEPTNAME",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CONTACTPERSON",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DESIGNATION",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "EXTCODE",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "CELLNO",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "REMARKS",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OrdKey",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "PASSWORD": {
+  "pg": "password",
+  "cols": [
+   {
+    "name": "PASSKEY",
+    "pg": "smallint",
+    "ms": "tinyint",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "PASSWORD",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "PASSWORD1",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   },
+   {
+    "name": "PASSWORD2",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": true,
+    "default": null
+   }
+  ]
+ },
+ "BusinessFlow": {
+  "pg": "businessflow",
+  "cols": [
+   {
+    "name": "PKey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Descrip",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Nop",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Amount",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Descrip1",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Nop1",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Amount1",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Descrip2",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Nop2",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Amount2",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Remarks",
+    "pg": "varchar(100)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "PartyNetOB": {
+  "pg": "partynetob",
+  "cols": [
+   {
+    "name": "Supkey",
+    "pg": "integer",
+    "ms": "int",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Baldate",
+    "pg": "timestamp",
+    "ms": "datetime",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OBAmt",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Billamt",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "RecAmt",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "NetBalance",
+    "pg": "numeric(18,2)",
+    "ms": "numeric",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "OrderBill": {
+  "pg": "orderbill",
+  "cols": [
+   {
+    "name": "SupOrder",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SupName",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Chillies",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Payar",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Venda",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "brinjal",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Padaval",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "BeatRoot",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "GBrinjal",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Flower",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "DStick",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Sambar",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "Koval",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SOnion",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "HSR",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MAXI",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SA",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OPEN",
+    "pg": "varchar(40)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ },
+ "OrderBill01": {
+  "pg": "orderbill01",
+  "cols": [
+   {
+    "name": "SupOrder",
+    "pg": "smallint",
+    "ms": "smallint",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SupName",
+    "pg": "varchar(50)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "HSR",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "MAXI",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "SA",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   },
+   {
+    "name": "OPENT",
+    "pg": "varchar(10)",
+    "ms": "varchar",
+    "identity": false,
+    "notnull": false,
+    "default": null
+   }
+  ]
+ }
+}

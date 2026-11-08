@@ -1,0 +1,40 @@
+{
+  "name": "nanosoft-billing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "NanoSoft Billing - React + Express port of the VB6 NVS commission-agent billing system, on PostgreSQL.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "init-env": "node scripts/init-env.js",
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "start": "node server/index.js",
+    "test": "node --test server/test/*.test.js",
+    "db:init": "node scripts/db-init.js",
+    "import": "node scripts/import-mssql.js",
+    "compose": "docker compose up --build",
+    "compose:db": "docker compose up -d db",
+    "compose:clean": "docker compose down -v && node -e \"require('fs').rmSync('.tmp',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}

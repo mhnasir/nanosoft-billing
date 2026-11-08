@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.tmp
+migrate
+.git
+*.log
+*.tgz

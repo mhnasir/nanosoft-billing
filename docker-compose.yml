@@ -1,0 +1,57 @@
+# NanoSoft Billing - local stack, laid out like college-portal-app's compose file:
+# Postgres 18.1 with its data under ./.tmp/dev/pgdata, healthcheck, own network.
+#
+#   docker compose up -d db        Postgres only (run the app with `npm run dev:server` / start.cmd)
+#   docker compose up -d --build   Postgres + the billing app on http://localhost:3000
+#   npm run compose:clean          stop everything and DELETE the database (./.tmp)
+#
+# Ports: college-portal-app already uses 5433 for its Postgres, so this one is 5434,
+# and bound to 127.0.0.1 so it is not reachable from the LAN.
+# This is a separate container/database on purpose: `compose:clean` there must never touch billing data.
+services:
+  db:
+    image: postgres:18.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-nvs_dev_password}
+      POSTGRES_DB: nvs
+    volumes:
+      # Postgres 18 images keep data in a versioned folder below /var/lib/postgresql (same mount as college-portal-app).
+      - ./.tmp/dev/pgdata:/var/lib/postgresql
+    ports:
+      - "127.0.0.1:5434:5432"
+    networks:
+      - nanosoft-billing
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nvs"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: "3000"
+      PG_HOST: db
+      PG_PORT: "5432"
+      PG_DATABASE: nvs
+      PG_USER: postgres
+      PG_PASSWORD: ${PG_PASSWORD:-nvs_dev_password}
+      JWT_SECRET: ${JWT_SECRET:-}
+      TOKEN_HOURS: ${TOKEN_HOURS:-12}
+    volumes:
+      # Exported SQL Server files for the one-time import:
+      #   docker compose run --rm app node scripts/import-mssql.js
+      - ./migrate:/app/migrate:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - nanosoft-billing
+    restart: unless-stopped
+
+networks:
+  nanosoft-billing:
