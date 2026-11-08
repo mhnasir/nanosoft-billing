@@ -17,8 +17,8 @@ export default function Dashboard() {
       {data && (
         <>
           <div className="stats">
-            <div className="stat"><div className="k">Customer bills today ({b?.Cnt || 0})</div><div className="v">{fmt(b?.Total)}</div></div>
-            <div className="stat"><div className="k">Supplier bills today ({s?.Cnt || 0})</div><div className="v">{fmt(s?.Total)}</div></div>
+            <div className="stat"><div className="k">Sales today ({b?.Cnt || 0})</div><div className="v">{fmt(b?.Total)}</div></div>
+            <div className="stat"><div className="k">Purchases today ({s?.Cnt || 0})</div><div className="v">{fmt(s?.Total)}</div></div>
             <div className="stat"><div className="k">Receipts today ({r?.Cnt || 0})</div><div className="v">{fmt(r?.Total)}</div></div>
             <div className="stat"><div className="k">Payments today ({p?.Cnt || 0})</div><div className="v">{fmt(p?.Total)}</div></div>
             <div className="stat"><div className="k">Total receivable</div><div className="v">{fmt(data.receivable)}</div></div>
@@ -27,16 +27,16 @@ export default function Dashboard() {
           <div className="card">
             <div className="row" style={{ marginBottom: 10 }}>
               <h2 className="grow" style={{ margin: 0 }}>Recent bills</h2>
-              <Link className="btn primary" to="/bills/B/new">New customer bill</Link>
-              <Link className="btn" to="/bills/S/new">New supplier bill</Link>
+              <Link className="btn primary" to="/bills/B/new">New sales bill</Link>
+              <Link className="btn" to="/bills/S/new">New purchase bill</Link>
             </div>
-            <table>
+            <table className="stack">
               <thead><tr><th>No</th><th>Date</th><th>Type</th><th>Party</th><th className="r">Amount</th></tr></thead>
               <tbody>
                 {data.recent.map((x: any) => (
                   <tr key={x.BillKey}>
                     <td><Link to={`/bills/${x.BillType}/${x.BillKey}`}>{x.BillNo}</Link></td>
-                    <td>{fdate(x.BillDate)}</td><td><span className="pill">{x.BillType === 'B' ? 'Customer' : 'Supplier'}</span></td>
+                    <td>{fdate(x.BillDate)}</td><td><span className="pill">{x.BillType === 'B' ? 'Sales' : 'Purchase'}</span></td>
                     <td>{x.SupName}</td><td className="r">{fmt(x.Gross)}</td>
                   </tr>
                 ))}

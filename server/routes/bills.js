@@ -1,15 +1,36 @@
 import { Router } from 'express';
 import { query, withTx, refreshBalance } from '../db.js';
-import { wrap, badReq, notFound, HttpError, ymd, num, int, r2, str, fyRange } from '../util.js';
+import { wrap, badReq, notFound, HttpError, ymd, num, int, r2, str } from '../util.js';
+import { GROSS } from '../gross.js';
 
 export const billsRouter = Router();
 
 // B = customer bill (debits the party in the ledger), S = supplier/farmer bill (credits the party).
 const TYPES = ['B', 'S'];
 
-// Same gross formula the VB app's BalanceSheetQuery uses.
-const GROSS = `((b.billamt+COALESCE(b.advamt,0)+COALESCE(b.coolyamt,0)+COALESCE(b.kcoolyamt,0)+COALESCE(b.basketamt,0)+COALESCE(b.gunnyamt,0)
-  +COALESCE(b.commissionamt,0)+COALESCE(b.englishamt,0)+COALESCE(b.othersaddamt,0))-(COALESCE(b.disamt,0)+COALESCE(b.otherslessamt,0)))`;
+// The old app's Format(x, "00"): whole rupees, halves round away from zero.
+const whole = (x) => Math.sign(x) * Math.round(Math.abs(x));
+const isKgs = (unit) => String(unit || '').trim().toUpperCase() === 'KGS';
+const txt = (x) => String(Math.round(x * 1000) / 1000);
+
+const CHARGE_KEYS = ['advAmt', 'coolyAmt', 'kCoolyAmt', 'basketAmt', 'gunnyAmt', 'commissionAmt', 'othersAddAmt'];
+
+/**
+ * gross / net from the amounts already on b. prevBal is the party's signed ledger balance before this bill.
+ * Sales bill: charges are added and discounts taken off. Purchase bill: the two "added" amounts (disAmt, othersLessAmt)
+ * are added and the charges (commission, cooly, lorry hire, gunny, advance ...) are deducted from the farmer.
+ */
+export function computeTotals(b, prevBal = 0) {
+  b.billAmt = r2(b.lines.reduce((s, l) => s + l.amount, 0));
+  const charges = CHARGE_KEYS.reduce((s, k) => s + b[k], 0);
+  const sideAmts = b.disAmt + b.othersLessAmt;
+  b.gross = r2(b.billType === 'B' ? b.billAmt + charges - sideAmts : b.billAmt + sideAmts - charges);
+  // What the printed bill shows as the amount to settle: previous balance and this bill, less cash. For a supplier the
+  // balance is stored negative when we owe them, so it is subtracted (same as the VB form).
+  b.prevBal = r2(prevBal);
+  b.netAmt = r2(b.billType === 'B' ? prevBal + b.gross - b.cashAmt : b.gross - prevBal - b.cashAmt);
+  return b;
+}
 
 export function parseBill(body) {
   const billType = str(body.billType, 1).toUpperCase();
@@ -25,44 +46,67 @@ export function parseBill(body) {
     const prodKey = int(l.prodKey);
     const qty = num(l.qty);
     const rate = num(l.rate);
+    const nop = num(l.nop);
+    const unit = str(l.unit, 10) || 'Kgs';
     if (!prodKey) throw badReq(`Line ${i + 1}: select an item`);
-    if (qty <= 0) throw badReq(`Line ${i + 1}: quantity must be greater than 0`);
+    // Same rule as the VB grid: Kgs items are weight x rate, every other unit (Nop ...) is number of bags x rate.
+    if (isKgs(unit) && qty === 0) throw badReq(`Line ${i + 1}: quantity must not be 0`);
+    if (!isKgs(unit) && nop === 0) throw badReq(`Line ${i + 1}: enter the number of bags (Nop)`);
     if (rate < 0) throw badReq(`Line ${i + 1}: rate cannot be negative`);
     return {
-      prodKey, qty, rate, nop: num(l.nop), unit: str(l.unit, 10) || 'Kg', marks: str(l.marks, 50),
-      weightTxt: str(l.weightTxt, 250), amount: r2(qty * rate), ord: i + 1,
+      prodKey, qty, rate, nop, unit, marks: str(l.marks, 50),
+      weightTxt: str(l.weightTxt, 250), amount: whole(isKgs(unit) ? qty * rate : nop * rate), ord: i + 1,
     };
   });
 
-  const billAmt = r2(lines.reduce((s, l) => s + l.amount, 0));
-  const adds = {
+  const b = {
+    billType, supKey, billDate, lines,
     advAmt: r2(num(body.advAmt)), coolyAmt: r2(num(body.coolyAmt)), kCoolyAmt: r2(num(body.kCoolyAmt)),
     basketAmt: r2(num(body.basketAmt)), gunnyAmt: r2(num(body.gunnyAmt)), commissionAmt: r2(num(body.commissionAmt)),
-    othersAddAmt: r2(num(body.othersAddAmt)),
-  };
-  const less = { disAmt: r2(num(body.disAmt)), othersLessAmt: r2(num(body.othersLessAmt)) };
-  const gross = r2(billAmt + Object.values(adds).reduce((a, b) => a + b, 0) - less.disAmt - less.othersLessAmt);
-  const cashAmt = r2(num(body.cashAmt));
-  if (gross < 0) throw badReq('Total cannot be negative');
-
-  return {
-    billType, supKey, billDate, lines, billAmt, ...adds, ...less, gross, cashAmt,
-    netAmt: r2(gross - cashAmt),
+    othersAddAmt: r2(num(body.othersAddAmt)), disAmt: r2(num(body.disAmt)), othersLessAmt: r2(num(body.othersLessAmt)),
+    cashAmt: r2(num(body.cashAmt)),
+    auto: { cooly: !!body.autoCooly, basket: !!body.autoBasket, gunny: !!body.autoGunny },
     othersAddStr: str(body.othersAddStr, 50),
     othersLessStr: str(body.othersLessStr, 50),
     lotNo: str(body.lotNo, 30),
-    inOutPur: str(body.inOutPur, 30),
-    nop: str(body.nop, 30) || String(lines.reduce((s, l) => s + l.nop, 0)),
+    // Header totals as the VB form saves them: Nop = total weight, InOutPur = total bags.
+    nop: txt(lines.reduce((s, l) => s + l.qty, 0)),
+    inOutPur: txt(lines.reduce((s, l) => s + l.nop, 0)),
     billNo: body.billNo ? int(body.billNo) : 0,
   };
+  computeTotals(b);
+  if (b.gross < 0) throw badReq('Total cannot be negative');
+  return b;
 }
 
+/**
+ * The "Yes" switches of the VB forms, worked out from the bags on each line and the product's rate per bag:
+ *   sales bill    - autoBasket: commission (stored in AdvAmt, as the old form did) = bags x product Basket
+ *                   autoCooly:  cooly = bags x product Cooly
+ *   purchase bill - autoGunny:  unloading cooly = bags x product Gunny
+ */
+async function applyAuto(db, b) {
+  const { cooly, basket, gunny } = b.auto;
+  if (!cooly && !basket && !gunny) return b;
+  const keys = [...new Set(b.lines.map((l) => l.prodKey))];
+  const rows = await db.query('SELECT prodkey, cooly, basket, gunny FROM productmast WHERE prodkey = ANY(@k::int[])', { k: keys });
+  const rate = new Map(rows.map((r) => [r.prodkey, r]));
+  const sum = (col) => r2(b.lines.reduce((s, l) => s + l.nop * Number(rate.get(l.prodKey)?.[col] || 0), 0));
+  if (b.billType === 'B') {
+    if (basket) b.advAmt = sum('basket');
+    if (cooly) b.coolyAmt = sum('cooly');
+  } else if (gunny) {
+    b.coolyAmt = sum('gunny');
+  }
+  return b;
+}
+
+/** Same rules as the VB MaxValueBillNo: sales bills (B/O) keep counting for ever, purchase bills (S) restart every day. */
 async function nextBillNo(db, billType, dateISO) {
-  const fy = fyRange(dateISO);
-  const r = await db.query(
-    'SELECT MAX(billno) AS m FROM bill01 WHERE billtype=@t AND billdate >= @a::date AND billdate < @b::date + 1',
-    { t: billType, a: fy.from, b: fy.to },
-  );
+  const r =
+    billType === 'B'
+      ? await db.query("SELECT MAX(billno) AS m FROM bill01 WHERE billtype IN ('B','O')")
+      : await db.query("SELECT MAX(billno) AS m FROM bill01 WHERE billtype='S' AND billdate >= @d::date AND billdate < @d::date + 1", { d: dateISO });
   return (r[0]?.m || 0) + 1;
 }
 
@@ -79,14 +123,15 @@ const HEADER_COLS = `billno,cooly,basket,gunny,billdate,supkey,billamt,disamt,ca
   advamt,coolyamt,kcoolyamt,basketamt,gunnyamt,commissionamt,englishamt,othersaddamt,othersaddstr,cashamt,dctype,netamt,billtype,multicashstat,
   nonbalancestat,inoutpur,lotno,nop,transportkey`;
 
-function headerValues(b, billNo, balAmt) {
+function headerValues(b, billNo) {
+  const yes = (f) => (f ? 'Yes' : '');
   return {
-    billno: billNo, cooly: '', basket: '', gunny: '', billdate: b.billDate, supkey: b.supKey, billamt: b.billAmt, disamt: b.disAmt,
+    billno: billNo, cooly: yes(b.auto.cooly), basket: yes(b.auto.basket), gunny: yes(b.auto.gunny), billdate: b.billDate, supkey: b.supKey, billamt: b.billAmt, disamt: b.disAmt,
     cashdate: b.billDate, dayamt: 0, otherslessamt: b.othersLessAmt, otherslessstr: b.othersLessStr, basketlessamt: 0, baldate: b.billDate,
-    balamt: balAmt, advamt: b.advAmt, coolyamt: b.coolyAmt, kcoolyamt: b.kCoolyAmt, basketamt: b.basketAmt, gunnyamt: b.gunnyAmt,
+    balamt: b.prevBal, advamt: b.advAmt, coolyamt: b.coolyAmt, kcoolyamt: b.kCoolyAmt, basketamt: b.basketAmt, gunnyamt: b.gunnyAmt,
     commissionamt: b.commissionAmt,
     englishamt: 0, // like the VB proc: the gross total goes to the ledger, Bill01.EnglishAmt stays 0
-    othersaddamt: b.othersAddAmt, othersaddstr: b.othersAddStr, cashamt: b.cashAmt, dctype: '1', netamt: b.netAmt, billtype: b.billType,
+    othersaddamt: b.othersAddAmt, othersaddstr: b.othersAddStr, cashamt: b.cashAmt, dctype: b.billType === 'S' ? '3' : '1', netamt: b.netAmt, billtype: b.billType,
     multicashstat: '', nonbalancestat: 0, inoutpur: b.inOutPur, lotno: b.lotNo, nop: b.nop, transportkey: 0,
   };
 }
@@ -156,7 +201,7 @@ async function loadBill(id) {
             b.billamt AS "BillAmt", b.disamt AS "DisAmt", b.otherslessamt AS "OthersLessAmt", b.otherslessstr AS "OthersLessStr",
             b.advamt AS "AdvAmt", b.coolyamt AS "CoolyAmt", b.kcoolyamt AS "KCoolyAmt", b.basketamt AS "BasketAmt", b.gunnyamt AS "GunnyAmt",
             b.commissionamt AS "CommissionAmt", b.othersaddamt AS "OthersAddAmt", b.othersaddstr AS "OthersAddStr", b.cashamt AS "CashAmt",
-            b.netamt AS "NetAmt", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey",
+            b.netamt AS "NetAmt", b.balamt AS "BalAmt", b.cooly AS "AutoCooly", b.basket AS "AutoBasket", b.gunny AS "AutoGunny", b.dctype AS "DcType", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey",
             ${GROSS} AS "Gross", s.supname AS "SupName", s.add1 AS "Add1", s.add2 AS "Add2", s.add3 AS "Add3", s.city AS "City",
             s.pincode AS "Pincode", s.state AS "State", s.tngstno AS "TNGSTNO",
             (SELECT p.phone FROM phonemast p WHERE p.supkey=s.supkey ORDER BY p.ordkey LIMIT 1) AS "Phone"
@@ -191,7 +236,10 @@ billsRouter.post(
     const out = await withTx(async (db) => {
       await assertParty(db, b.supKey);
       const billNo = b.billNo || (await nextBillNo(db, b.billType, b.billDate));
-      const hv = headerValues(b, billNo, r2(await balanceBefore(db, b.supKey, 0)));
+      await applyAuto(db, b);
+      computeTotals(b, await balanceBefore(db, b.supKey, 0));
+      if (b.gross < 0) throw badReq('Total cannot be negative');
+      const hv = headerValues(b, billNo);
       const cols = HEADER_COLS.split(',').map((c) => c.trim());
       const ins = await db.query(`INSERT INTO bill01(${cols.join(',')}) VALUES(${cols.map((c) => '@' + c).join(',')}) RETURNING billkey`, hv);
       const billKey = ins[0].billkey;
@@ -223,8 +271,13 @@ billsRouter.put(
       if (cur[0].billtype !== b.billType) throw badReq('Bill type cannot be changed');
       await assertParty(db, b.supKey);
       const billNo = b.billNo || cur[0].billno;
-      const hv = headerValues(b, billNo, r2(await balanceBefore(db, b.supKey, cur[0].fatranskey)));
-      const cols = HEADER_COLS.split(',').map((c) => c.trim());
+      await applyAuto(db, b);
+      computeTotals(b, await balanceBefore(db, b.supKey, cur[0].fatranskey));
+      if (b.gross < 0) throw badReq('Total cannot be negative');
+      const hv = headerValues(b, billNo);
+      // Flags this screen does not edit (non-balance, multi-cash, transport) stay as they were.
+      const KEEP = ['nonbalancestat', 'multicashstat', 'transportkey'];
+      const cols = HEADER_COLS.split(',').map((c) => c.trim()).filter((c) => !KEEP.includes(c));
       await db.query(`UPDATE bill01 SET ${cols.map((c) => `${c}=@${c}`).join(',')} WHERE billkey=@id`, { ...hv, id });
       const sign = b.billType === 'B' ? 1 : -1;
       if (cur[0].fatranskey) {

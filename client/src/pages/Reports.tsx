@@ -28,18 +28,18 @@ export function Ledger() {
       <ErrorBox error={error || parties.error} />
       {data && (
         <div className="tablewrap" style={{ maxHeight: 'none' }}>
-          <table>
-            <thead><tr><th>Date</th><th>Particulars</th><th>Notes</th><th className="r">Debit</th><th className="r">Credit</th><th className="r">Balance</th></tr></thead>
+          <table className="fit">
+            <thead><tr><th>Date</th><th>Particulars</th><th className="r">Debit</th><th className="r">Credit</th><th className="r">Balance</th></tr></thead>
             <tbody>
-              <tr><td>{fdate(from)}</td><td colSpan={4}><b>Opening balance</b></td><td className="r"><Bal v={data.opening} /></td></tr>
+              <tr><td>{fdate(from)}</td><td colSpan={3}><b>Opening balance</b></td><td className="r"><Bal v={data.opening} /></td></tr>
               {data.entries.map((e: any) => (
                 <tr key={e.Id}>
-                  <td>{fdate(e.Date)}</td><td>{({ B: 'Bill', S: 'Supplier bill', R: 'Receipt', P: 'Payment' } as Record<string, string>)[e.DocType] || e.DocType} {e.DocNo ? `[${e.DocNo}]` : ''}</td><td>{e.Notes}</td>
+                  <td>{fdate(e.Date)}</td><td>{({ B: 'Bill', S: 'Supplier bill', R: 'Receipt', P: 'Payment' } as Record<string, string>)[e.DocType] || e.DocType} {e.DocNo ? `[${e.DocNo}]` : ''}{e.Notes ? <div className="muted note">{e.Notes}</div> : null}</td>
                   <td className="r">{e.Debit ? fmt(e.Debit) : ''}</td><td className="r">{e.Credit ? fmt(e.Credit) : ''}</td><td className="r"><Bal v={e.Balance} /></td>
                 </tr>
               ))}
             </tbody>
-            <tfoot><tr><td colSpan={3}>Closing</td><td className="r">{fmt(data.totalDebit)}</td><td className="r">{fmt(data.totalCredit)}</td><td className="r"><Bal v={data.closing} /></td></tr></tfoot>
+            <tfoot><tr><td colSpan={2}>Closing</td><td className="r">{fmt(data.totalDebit)}</td><td className="r">{fmt(data.totalCredit)}</td><td className="r"><Bal v={data.closing} /></td></tr></tfoot>
           </table>
         </div>
       )}
@@ -61,7 +61,7 @@ export function Outstanding() {
       <ErrorBox error={error} />
       {data && (
         <div className="tablewrap" style={{ maxHeight: 'none' }}>
-          <table>
+          <table className="stack">
             <thead><tr><th>Party</th><th>City</th><th>Group</th><th>Phone</th><th>Last payment</th><th className="r">Balance</th></tr></thead>
             <tbody>
               {data.rows.map((r: any) => (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { api, getToken, setToken, type Row } from './api';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -14,7 +14,11 @@ import { Ledger, Outstanding, DayBook, TrialBalance } from './pages/Reports';
 export default function App() {
   const [user, setUser] = useState<Row | null>(null);
   const [ready, setReady] = useState(false);
+  const [menu, setMenu] = useState(false);
   const nav = useNavigate();
+  const loc = useLocation();
+
+  useEffect(() => setMenu(false), [loc.pathname]);
 
   useEffect(() => {
     const out = () => setUser(null);
@@ -25,6 +29,36 @@ export default function App() {
     return () => window.removeEventListener('nb-logout', out);
   }, []);
 
+  // Label table cells from their column headings so "stack" tables can show as cards on phones.
+  useEffect(() => {
+    const label = () => {
+      document.querySelectorAll('table.stack').forEach((t) => {
+        const hs = [...t.querySelectorAll('thead th')].map((h) => h.textContent?.trim() || '');
+        t.querySelectorAll('tbody tr, tfoot tr').forEach((tr) => {
+          let col = 0;
+          [...tr.children].forEach((td) => {
+            const cs = (td as HTMLTableCellElement).colSpan || 1;
+            if (cs === 1 && hs[col]) td.setAttribute('data-label', hs[col]);
+            else td.removeAttribute('data-label');
+            col += cs;
+          });
+        });
+      });
+    };
+    label();
+    const mo = new MutationObserver(label);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = menu ? 'hidden' : '';
+    if (!menu) return;
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(false);
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
+  }, [menu]);
+
   if (!ready) return null;
   if (!user) return <Login onLogin={(u) => { setUser(u); nav('/'); }} />;
 
@@ -33,12 +67,19 @@ export default function App() {
 
   return (
     <div className="shell">
-      <nav className="side">
+      <header className="topbar">
+        <span className="tb-brand">NanoSoft Billing</span>
+        <button className="burger" aria-label="Menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+          <span /><span /><span />
+        </button>
+      </header>
+      {menu && <div className="scrim" onClick={() => setMenu(false)} />}
+      <nav className={`side${menu ? ' open' : ''}`}>
         <div className="brand">NanoSoft Billing</div>
         {link('/', 'Dashboard')}
         <div className="grp">Transactions</div>
-        {link('/bills/B', 'Customer bills')}
-        {link('/bills/S', 'Supplier bills')}
+        {link('/bills/B', 'Sales bills')}
+        {link('/bills/S', 'Purchase bills')}
         {link('/receipts/R', 'Receipts')}
         {link('/receipts/P', 'Payments')}
         <div className="grp">Reports</div>

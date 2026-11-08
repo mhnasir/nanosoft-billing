@@ -64,7 +64,7 @@ export default function Receipts() {
       </div>
       <ErrorBox error={error || (!edit ? msg : '')} />
       <div className="tablewrap">
-        <table>
+        <table className="stack">
           <thead><tr><th>Date</th><th>Party</th><th>Mode</th><th>Ref</th><th>Narration</th><th className="r">Discount</th><th className="r">Amount</th><th /></tr></thead>
           <tbody>
             {(data || []).map((r) => (

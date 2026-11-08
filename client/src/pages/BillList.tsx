@@ -3,7 +3,8 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { fdate, fmt, qs, todayISO } from '../api';
 import { ErrorBox, Field, useLoad } from '../components';
 
-export const BILL_TITLE: Record<string, string> = { B: 'Customer bills', S: 'Supplier bills' };
+import { BILL_TITLE, KIND } from '../billkinds';
+export { BILL_TITLE };
 
 export default function BillList() {
   const { type = 'B' } = useParams();
@@ -20,7 +21,7 @@ export default function BillList() {
     <>
       <div className="row" style={{ marginBottom: 12 }}>
         <h1 className="grow" style={{ margin: 0 }}>{BILL_TITLE[type]}</h1>
-        <Link className="btn primary" to={`/bills/${type}/new`}>New bill</Link>
+        <Link className="btn primary" to={`/bills/${type}/new`}>New {KIND[type]?.one || 'bill'}</Link>
       </div>
       <div className="card row">
         <Field label="From"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
@@ -29,8 +30,8 @@ export default function BillList() {
       </div>
       <ErrorBox error={error} />
       <div className="tablewrap">
-        <table>
-          <thead><tr><th>No</th><th>Date</th><th>Party</th><th>City</th><th className="r">Total</th><th className="r">Cash</th><th className="r">Balance</th></tr></thead>
+        <table className="stack">
+          <thead><tr><th>No</th><th>Date</th><th>{KIND[type]?.party || 'Party'}</th><th>City</th><th className="r">Total</th><th className="r">Cash</th><th className="r">Balance</th></tr></thead>
           <tbody>
             {(data || []).map((r) => (
               <tr key={r.BillKey} className="click" onClick={() => nav(`/bills/${type}/${r.BillKey}`)}>

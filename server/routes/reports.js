@@ -1,13 +1,12 @@
 import { Router } from 'express';
 import { query } from '../db.js';
 import { wrap, badReq, notFound, ymd, int, r2, str, todayISO } from '../util.js';
+import { GROSS } from '../gross.js';
 
 export const reportsRouter = Router();
 
 // Party balance = opening balance + every ledger row (positive = party owes us, negative = we owe party).
 const BAL = `COALESCE(s.opnbal,0) + COALESCE((SELECT SUM(f.amount) FROM fatrans f WHERE f.supkey=s.supkey),0)`;
-const GROSS = `((b.billamt+COALESCE(b.advamt,0)+COALESCE(b.coolyamt,0)+COALESCE(b.kcoolyamt,0)+COALESCE(b.basketamt,0)+COALESCE(b.gunnyamt,0)
-  +COALESCE(b.commissionamt,0)+COALESCE(b.englishamt,0)+COALESCE(b.othersaddamt,0))-(COALESCE(b.disamt,0)+COALESCE(b.otherslessamt,0)))`;
 
 /* ---------- dashboard ---------- */
 reportsRouter.get(

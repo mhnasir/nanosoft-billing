@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { fdate, fmt } from '../api';
+import { fdate, fmt, rupeesInWords } from '../api';
+import { AMT_COL, KIND } from '../billkinds';
 import { ErrorBox, useLoad } from '../components';
 
 export default function BillPrint() {
@@ -9,15 +10,14 @@ export default function BillPrint() {
   const b = bill.data;
   const c = company.data || {};
   const num = (k: string) => Number(b?.[k]) || 0;
-  const charges: [string, number][] = b
-    ? ([
-        ['Commission', num('CommissionAmt')], ['Cooly', num('CoolyAmt')], ['K-Cooly', num('KCoolyAmt')], ['Basket', num('BasketAmt')],
-        ['Gunny', num('GunnyAmt')], ['Advance', num('AdvAmt')], [b.OthersAddStr || 'Other charges', num('OthersAddAmt')],
-      ] as [string, number][]).filter(([, v]) => v)
-    : [];
-  const deductions: [string, number][] = b
-    ? ([['Discount', num('DisAmt')], [b.OthersLessStr || 'Other deductions', num('OthersLessAmt')]] as [string, number][]).filter(([, v]) => v)
-    : [];
+  const kind = KIND[b?.BillType || type] || KIND.B;
+  const pick = (fields: [string, string][]) =>
+    fields.map(([k, label]) => [k === 'othersAddAmt' && b?.OthersAddStr ? b.OthersAddStr : k === 'othersLessAmt' && b?.OthersLessStr ? b.OthersLessStr : label, num(AMT_COL[k])] as [string, number]).filter(([, v]) => v);
+  const charges = b ? pick(kind.charges) : [];
+  const deductions = b ? pick(kind.sides) : [];
+  const sign = kind.chargesSign === 1 ? ['+', '−'] : ['−', '+'];
+  const weight = b ? b.lines.reduce((s: number, l: any) => s + Number(l.Qty), 0) : 0;
+  const bags = b ? b.lines.reduce((s: number, l: any) => s + Number(l.Nop), 0) : 0;
 
   return (
     <>
@@ -44,13 +44,13 @@ export default function BillPrint() {
               {[b.City, b.Pincode].filter(Boolean).join(' - ')} {b.Phone ? `· ${b.Phone}` : ''}
             </div>
             <div style={{ textAlign: 'right' }}>
-              <b>{b.BillType === 'B' ? 'BILL' : 'SUPPLIER BILL'} No. {b.BillNo}</b><br />
+              <b>{b.BillType === 'B' ? 'SALES BILL' : 'PURCHASE BILL'} No. {b.BillNo}</b><br />
               Date: {fdate(b.BillDate)}
               {b.LotNo ? <><br />Lot: {b.LotNo}</> : null}
             </div>
           </div>
           <table>
-            <thead><tr><th>#</th><th>Item</th><th className="r">Nos</th><th className="r">Qty</th><th>Unit</th><th className="r">Rate</th><th className="r">Amount</th></tr></thead>
+            <thead><tr><th>#</th><th>Item</th><th className="r">Bags</th><th className="r">Weight</th><th>Unit</th><th className="r">Rate</th><th className="r">Amount</th></tr></thead>
             <tbody>
               {b.lines.map((l: any, i: number) => (
                 <tr key={l.Sal02Key}>
@@ -62,12 +62,15 @@ export default function BillPrint() {
             </tbody>
           </table>
           <div className="totals" style={{ marginTop: 10 }}>
+            <div><span>Weight / bags</span><span>{weight} / {bags}</span></div>
             <div><span>Items total</span><span>{fmt(b.BillAmt)}</span></div>
-            {charges.map(([k, v]) => <div key={k}><span>+ {k}</span><span>{fmt(v)}</span></div>)}
-            {deductions.map(([k, v]) => <div key={k}><span>− {k}</span><span>{fmt(v)}</span></div>)}
-            <div className="big"><span>Total</span><span>{fmt(b.Gross)}</span></div>
-            {num('CashAmt') > 0 && <div><span>Cash</span><span>{fmt(b.CashAmt)}</span></div>}
-            {num('CashAmt') > 0 && <div><span>Balance</span><span>{fmt(num('NetAmt'))}</span></div>}
+            {charges.map(([k, v]) => <div key={k}><span>{sign[0]} {k}</span><span>{fmt(v)}</span></div>)}
+            {deductions.map(([k, v]) => <div key={k}><span>{sign[1]} {k}</span><span>{fmt(v)}</span></div>)}
+            <div className="big"><span>Bill total</span><span>{fmt(b.Gross)}</span></div>
+            <div><span>Previous balance</span><span>{fmt(num('BalAmt'))}</span></div>
+            {num('CashAmt') > 0 && <div><span>{kind.cash}</span><span>{fmt(b.CashAmt)}</span></div>}
+            <div className="big"><span>Net balance</span><span>{fmt(num('NetAmt'))}</span></div>
+            <div style={{ fontSize: '.85rem' }}>{rupeesInWords(b.Gross)}</div>
           </div>
         </div>
       )}

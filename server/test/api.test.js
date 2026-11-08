@@ -91,7 +91,11 @@ T('customer bill posts a debit to the ledger and updates the balance', async () 
   // items 125 + 80 = 205; + 5 + 2.5 - 1 = 211.5
   r = await api('GET', `/api/bills/${ids.bill}`);
   assert.equal(r.data.Gross, 211.5);
-  assert.equal(r.data.NetAmt, 161.5);
+  assert.equal(r.data.NetAmt, 261.5); // previous balance 100 + 211.5 - cash 50
+  assert.equal(r.data.BalAmt, 100); // previous balance, kept on the bill
+  assert.equal(r.data.DcType.trim(), '1');
+  assert.equal(r.data.Nop, '14'); // total weight (10 + 4 kg)
+  assert.equal(r.data.InOutPur, '2'); // total bags
   assert.equal(r.data.lines.length, 2);
   assert.equal(r.data.lines[0].ProdName, 'Onion (big)');
   assert.equal(r.data.SupName, 'Ravi Traders');
@@ -212,6 +216,66 @@ T('delete bill removes ledger entry; used masters are protected', async () => {
   const p = await api('POST', '/api/parties', { SupName: 'Temp', SupType: 'C' });
   assert.equal((await api('DELETE', `/api/parties/${p.data.id}`)).status, 200);
   assert.equal((await api('GET', '/api/parties?type=C')).data.some((x) => x.SupName === 'Temp'), false);
+});
+
+T('purchase bill: deductions, per-day numbering; sales numbering never restarts; auto cooly/commission', async () => {
+  const farmer = (await api('POST', '/api/parties', { SupName: 'Farmer Raman', City: 'Ooty', SupType: 'S', OpnBal: 0 })).data.id;
+  const shop = (await api('POST', '/api/parties', { SupName: 'Shop Two', City: 'Erode', SupType: 'C', OpnBal: 0 })).data.id;
+  const veg = (await api('POST', '/api/products', { ProdName: 'Beans', Unit: 'Nop', CurPrice: 0, Cooly: 3, Basket: 2, Gunny: 4 })).data.id;
+  // purchase: 5000 + added 50 - charges 450 = 4600 credited to the farmer
+  let r = await api('POST', '/api/bills', {
+    billType: 'S', supKey: farmer, billDate: '2026-09-10', lotNo: 'L1', commissionAmt: 250, coolyAmt: 40, basketAmt: 60, advAmt: 100, disAmt: 20, othersLessAmt: 30, cashAmt: 1000,
+    lines: [{ prodKey: ids.prod, qty: 100, unit: 'Kgs', nop: 5, rate: 50 }],
+  });
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  assert.equal(r.data.billNo, 1);
+  const key = r.data.billKey;
+  let g = (await api('GET', `/api/bills/${key}`)).data;
+  assert.equal(g.Gross, 4600);
+  assert.equal(g.NetAmt, 3600); // nothing owed before; 4600 - cash 1000
+  assert.equal(g.DcType.trim(), '3');
+  assert.equal(g.LotNo, 'L1');
+  const f = await adminClient.query('SELECT amount, less FROM fatrans WHERE refkey=$1 AND doctype=$2', [key, 'S']);
+  assert.equal(Number(f.rows[0].amount), -4600);
+  assert.equal(Number(f.rows[0].less), 1000);
+  // same day -> 2, next day -> back to 1
+  r = await api('POST', '/api/bills', { billType: 'S', supKey: farmer, billDate: '2026-09-10', lines: [{ prodKey: ids.prod, qty: 10, unit: 'Kgs', rate: 10 }] });
+  assert.equal(r.data.billNo, 2);
+  const keyB = r.data.billKey;
+  r = await api('POST', '/api/bills', { billType: 'S', supKey: farmer, billDate: '2026-09-11', lines: [{ prodKey: ids.prod, qty: 10, unit: 'Kgs', rate: 10 }] });
+  assert.equal(r.data.billNo, 1);
+  // we now owe the farmer 4600 + 100 + 100: the next purchase bill shows it on the bill
+  g = (await api('GET', `/api/bills/${r.data.billKey}`)).data;
+  assert.equal(g.BalAmt, -4700);
+  assert.equal(g.NetAmt, 4800); // 100 + 4700
+  // sales bill numbers keep counting in a new year
+  const nextB = (await api('GET', '/api/bills/next-no?type=B&date=2027-05-01')).data.billNo;
+  const sb = await api('POST', '/api/bills', { billType: 'B', supKey: shop, billDate: '2027-05-01', lines: [{ prodKey: ids.prod, qty: 1, unit: 'Kgs', rate: 10 }] });
+  assert.equal(sb.data.billNo, nextB);
+  assert.ok(nextB > 1);
+  // auto switches: commission = bags x product Basket (2), cooly = bags x product Cooly (3)
+  r = await api('POST', '/api/bills', {
+    billType: 'B', supKey: shop, billDate: '2026-09-12', autoBasket: true, autoCooly: true, lines: [{ prodKey: veg, qty: 0, unit: 'Nop', nop: 10, rate: 25 }],
+  });
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  g = (await api('GET', `/api/bills/${r.data.billKey}`)).data;
+  assert.equal(g.BillAmt, 250);
+  assert.equal(g.AdvAmt, 20); // commission shown in the Com cell of the old form
+  assert.equal(g.CoolyAmt, 30);
+  assert.equal(g.Gross, 300);
+  assert.equal(g.AutoBasket, 'Yes');
+  // purchase: unloading cooly = bags x product Gunny (4)
+  r = await api('POST', '/api/bills', { billType: 'S', supKey: farmer, billDate: '2026-09-12', autoGunny: true, lines: [{ prodKey: veg, qty: 0, unit: 'Nop', nop: 10, rate: 25 }] });
+  g = (await api('GET', `/api/bills/${r.data.billKey}`)).data;
+  assert.equal(g.CoolyAmt, 40);
+  assert.equal(g.Gross, 210); // 250 - 40
+  // editing keeps the numbers and the flags this screen does not touch
+  await adminClient.query('UPDATE bill01 SET nonbalancestat=1 WHERE billkey=$1', [keyB]);
+  r = await api('PUT', `/api/bills/${keyB}`, { billType: 'S', supKey: farmer, billDate: '2026-09-10', lines: [{ prodKey: ids.prod, qty: 20, unit: 'Kgs', rate: 10 }] });
+  assert.equal(r.status, 200);
+  const kept = await adminClient.query('SELECT billno, nonbalancestat FROM bill01 WHERE billkey=$1', [keyB]);
+  assert.equal(kept.rows[0].billno, 2);
+  assert.equal(kept.rows[0].nonbalancestat, 1);
 });
 
 T('DRY_RUN rolls bill writes back', async () => {

@@ -13,7 +13,7 @@ const CONFIG: Record<string, { title: string; idKey: string; cols: Col[]; blank:
       { key: 'Basket', label: 'Basket', type: 'number', r: true }, { key: 'Gunny', label: 'Gunny', type: 'number', r: true },
       { key: 'OrderKey', label: 'Sort order', type: 'number', r: true }, { key: 'ProdNo', label: 'Code' },
     ],
-    blank: { Unit: 'Kg' },
+    blank: { Unit: 'Kgs' },
   },
   groups: {
     title: 'Party groups', idKey: 'CustKey',
@@ -70,7 +70,7 @@ export function SimpleMaster({ kind }: { kind: string }) {
       </div>
       <ErrorBox error={error || (!edit ? msg : '')} />
       <div className="tablewrap">
-        <table>
+        <table className="stack">
           <thead><tr>{cfg.cols.map((c) => <th key={c.key} className={c.r ? 'r' : ''}>{c.label}</th>)}<th /></tr></thead>
           <tbody>
             {(data || []).map((r) => (

@@ -47,7 +47,7 @@ export default function Parties() {
       </div>
       <ErrorBox error={error || (!edit ? msg : '')} />
       <div className="tablewrap">
-        <table>
+        <table className="stack">
           <thead><tr><th>Name</th><th>City</th><th>Group</th><th>Phone</th><th className="r">Balance</th><th /></tr></thead>
           <tbody>
             {(data || []).map((r) => (
