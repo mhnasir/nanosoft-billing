@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import { api, dateOnly, fmt, r2, rupeesInWords, todayISO, type Row } from '../api';
-import { ErrorBox, Field, Picker, useLoad } from '../components';
+import { api, dateOnly, fmt, r2, rupeesInWords, todayISO, userKey, type Row } from '../api';
+import { ErrorBox, Field, Picker, useLoad, useProductImages } from '../components';
 import { AMT_COL, KIND } from '../billkinds';
 import BagWeights from '../BagWeights';
 import SubSplit, { subAmt, type Sub } from '../SubSplit';
@@ -40,6 +40,12 @@ export default function BillEditor() {
   const [othersAddStr, setAddStr] = useState('');
   const [othersLessStr, setLessStr] = useState('');
   const [cashAmt, setCash] = useState('');
+  // On a cash bill the cash is normally the full bill total: it follows the total until the user types a different amount.
+  const [cashManual, setCashManual] = useState(false);
+  // Credit bill = nothing is received / paid with it, so the cash box is switched off. Each user's last choice is the default for every bill.
+  const payKey = `nvs.payMode.${userKey()}`;
+  const [payMode, setPayMode] = useState<'credit' | 'cash'>(() => { try { return localStorage.getItem(payKey) === 'credit' ? 'credit' : 'cash'; } catch { return 'cash'; } });
+  const choosePay = (m: 'credit' | 'cash') => { setPayMode(m); setCashManual(false); try { localStorage.setItem(payKey, m); } catch { /* storage blocked: still works this session */ } };
   const [auto, setAuto] = useState<Record<string, boolean>>({});
   const [nonBal, setNonBal] = useState(false);
   const [prevSaved, setPrevSaved] = useState<number | null>(null);
@@ -56,6 +62,8 @@ export default function BillEditor() {
   const [comPct, setComPct] = useState(''); // commission as a % of the items total (farmer / patiyal bills)
   const [refBill, setRefBill] = useState(0); // farmer commission bill: the purchase bill (chitta) it settles
   const chittas = useLoad<Row[]>(kind?.chitta && supKey ? `/bills?type=S&supKey=${supKey}` : null);
+  const imgs = useProductImages(); // item pictures: shown beside the item here, never printed
+  const fieldSettings = useLoad<Record<string, { hidden?: string[] }>>(kind ? '/settings/bill-fields' : null); // components switched off in Settings
 
   const partyOpts = useMemo(() => (parties.data || []).map((p): Row => ({ ...p, __id: p.SupKey })).sort((x, y) => Number(y.SupType === kind?.partyType) - Number(x.SupType === kind?.partyType)), [parties.data, kind]);
   const prodOpts = useMemo(() => (products.data || []).map((p) => ({ ...p, __id: p.ProdKey })), [products.data]);
@@ -71,6 +79,8 @@ export default function BillEditor() {
     setAddStr(b.OthersAddStr || '');
     setLessStr(b.OthersLessStr || '');
     setCash(String(b.CashAmt ?? ''));
+    setCashManual(true); // a saved bill keeps its own cash figure
+    setPayMode(Number(b.CashAmt) > 0 ? 'cash' : 'credit'); // a saved bill shows how it was settled; this does not change the user's default
     const a: Record<string, string> = {};
     for (const [k, col] of Object.entries(AMT_COL)) a[k] = b[col] ? String(b[col]) : '';
     setAmts(a);
@@ -121,6 +131,11 @@ export default function BillEditor() {
   // The "by bag" switches fill an amount from the product's rate per bag.
   const prodBy = new Map((products.data || []).map((p) => [p.ProdKey, p]));
   const autoAmt = (col: string) => r2(lines.reduce((s, l) => s + n(l.nop) * n(prodBy.get(l.prodKey)?.[col]), 0));
+  // A box switched off in Settings is not shown - unless it already holds a value, which must never be hidden.
+  const hid: string[] = fieldSettings.data?.[type]?.hidden || [];
+  const amtShown = (k: string) => !hid.includes(k) || n(amts[k] || '') > 0;
+  const autoShown = (flag: string) => !hid.includes(flag) || !!auto[flag];
+  const comShown = !hid.includes('commPct') || n(comPct) > 0;
   const pctOn = (k: string) => !!kind.commPct && k === 'commissionAmt' && n(comPct) > 0;
   const eff = (k: string) => {
     if (pctOn(k)) return r2((billAmt * n(comPct)) / 100);
@@ -133,7 +148,10 @@ export default function BillEditor() {
   const party: Row | undefined = partyOpts.find((p) => p.__id === supKey);
   // Balance before this bill: a new bill uses the party's current balance, a saved one the figure stored with it.
   const prev = nonBal || kind.doc ? 0 : r2(isNew || prevSaved === null ? Number(party?.Balance) || 0 : prevSaved);
-  const balance = r2(type === 'B' ? prev + gross - n(cashAmt) : gross - prev - n(cashAmt));
+  const credit = payMode === 'credit';
+  const cashEff = credit ? 0 : cashManual ? n(cashAmt) : gross; // a credit bill carries no cash; a cash bill defaults to the full total
+  const cashShown = credit ? '' : cashManual ? cashAmt : gross ? String(gross) : '';
+  const balance = r2(type === 'B' ? prev + gross - cashEff : gross - prev - cashEff);
 
   const canSave = !!supKey && (kind.chit ? bags > 0 : billAmt > 0);
   const custOpts = (parties.data || []).map((p): Row => ({ ...p, __id: p.SupKey })).sort((x, y) => Number(y.SupType === 'C') - Number(x.SupType === 'C'));
@@ -183,7 +201,7 @@ export default function BillEditor() {
     else if (t.dataset.nav === 'f') {
       e.preventDefault();
       // an empty amount box on Enter jumps to Cash; Enter on Cash goes to Save and print
-      if (t.id !== 'cash-box' && !(t as HTMLInputElement).value.trim()) focusId('cash-box'); else focusNext(t);
+      if (t.id !== 'cash-box' && !(t as HTMLInputElement).value.trim()) focusId(credit ? 'save-btn' : 'cash-box'); else focusNext(t);
     }
   }
 
@@ -192,7 +210,7 @@ export default function BillEditor() {
     setError('');
     try {
       const body = {
-        nonBalance: nonBal, billType: type, billNo: n(billNo) || undefined, billDate, supKey, lotNo, othersAddStr, othersLessStr, cashAmt: n(cashAmt),
+        nonBalance: nonBal, billType: type, billNo: n(billNo) || undefined, billDate, supKey, lotNo, othersAddStr, othersLessStr, cashAmt: cashEff,
         refBillKey: refBill,
         ...Object.fromEntries(Object.entries(amts).map(([k, v]) => [k, n(v)])),
         ...(pctOn('commissionAmt') ? { commissionAmt: eff('commissionAmt') } : {}),
@@ -220,8 +238,14 @@ export default function BillEditor() {
   const loading = parties.loading || products.loading || (!isNew && existing.loading);
   return (
     <div className="bill-screen" onKeyDown={onKeys}>
-      <div className="row bs-title" style={{ marginBottom: 12 }}>
+      <div className={`row bs-title tint ${["S", "F", "L", "C"].includes(type) ? "is-purchase" : "is-sales"}`} style={{ marginBottom: 12 }}>
         <h1 className="grow" style={{ margin: 0 }}>{isNew ? 'New' : 'Edit'} {kind.one}</h1>
+        {!kind.chit && (
+          <div className="seg" role="group" aria-label="Bill type" title="Credit bill: nothing received or paid with it. Cash bill: enter the cash. Your choice is remembered as your default.">
+            <button type="button" tabIndex={-1} className={credit ? 'on' : ''} onClick={() => choosePay('credit')}>Credit</button>
+            <button type="button" tabIndex={-1} className={!credit ? 'on' : ''} onClick={() => choosePay('cash')}>Cash</button>
+          </div>
+        )}
         <Link className="btn" to={`/bills/${type}`}>Back to list</Link>
       </div>
       <ErrorBox error={error || parties.error || products.error || existing.error} />
@@ -259,7 +283,7 @@ export default function BillEditor() {
           <table className="lines sheet">
             <thead>
               <tr>
-                <th style={{ width: 36 }}>#</th><th>Item</th><th className="r" style={{ width: 90 }}>Bags</th>
+                <th style={{ width: 36 }}>#</th><th style={{ width: 54 }}>Pic</th><th>Item</th><th className="r" style={{ width: 90 }}>Bags</th>
                 {!kind.chit && <><th className="r" style={{ width: 110 }}>Weight</th><th style={{ width: 80 }}>Unit</th><th className="r" style={{ width: 110 }}>Rate</th></>}
                 <th>Mark</th>{!kind.chit && <th className="r" style={{ width: 120 }}>Amount</th>}<th style={{ width: 40 }} />
               </tr>
@@ -268,9 +292,10 @@ export default function BillEditor() {
               {lines.map((l, i) => (
                 <tr key={i}>
                   <td className="muted c-no" data-label="Line">{i + 1}</td>
+                  <td className="c-pic" data-label="Pic">{imgs[l.prodKey] ? <img className="line-thumb" src={imgs[l.prodKey]} alt="" /> : <span className="line-thumb blank" />}</td>
                   <td className="c-item" data-label="Item">
                     <Picker
-                      id={`prod${i}`} inputId={`ln-${i}-item`} onPick={(row) => afterItem(i, row.Unit || 'Kgs')} options={prodOpts} value={l.prodKey} placeholder="Item…"
+                      id={`prod${i}`} inputId={`ln-${i}-item`} thumbOf={(p) => imgs[p.ProdKey]} onPick={(row) => afterItem(i, row.Unit || 'Kgs')} options={prodOpts} value={l.prodKey} placeholder="Item…"
                       labelOf={(p) => p.ProdName + (p.BrandName ? ` (${p.BrandName})` : '')}
                       onChange={(k, row) => setLine(i, row ? { prodKey: k, unit: kind.chit ? 'Nop' : row.Unit || 'Kgs', rate: l.rate || (row.CurPrice ? String(row.CurPrice) : '') } : { prodKey: 0 })}
                     />
@@ -311,8 +336,8 @@ export default function BillEditor() {
               {!showCharges && adds > 0 && <span className="muted">({fmt(adds)} added)</span>}
             </div>
             {showCharges && <div className="form-grid">
-              {kind.commPct && <Field label="COM % (of items total)"><input data-nav="f" className="num" inputMode="decimal" value={comPct} onChange={(e) => setComPct(e.target.value)} /></Field>}
-              {ADDS.map(([k, label]) => {
+              {kind.commPct && comShown && <Field label="COM % (of items total)"><input data-nav="f" className="num" inputMode="decimal" value={comPct} onChange={(e) => setComPct(e.target.value)} /></Field>}
+              {ADDS.filter(([k]) => amtShown(k)).map(([k, label]) => {
                 const a = kind.autos.find(([, , fills]) => fills === k);
                 const on = !!(a && auto[a[0]]) || pctOn(k);
                 return (
@@ -324,17 +349,17 @@ export default function BillEditor() {
             </div>}
             <div className="row" style={{ margin: '8px 0' }}>
               {!kind.doc && <label className="row" style={{ gap: 6 }}><input type="checkbox" checked={nonBal} onChange={(e) => setNonBal(e.target.checked)} /> Non-balance bill (no previous balance)</label>}
-              {showCharges && kind.autos.map(([flag, label]) => (
+              {showCharges && kind.autos.filter(([flag]) => autoShown(flag)).map(([flag, label]) => (
                 <label key={flag} className="row" style={{ gap: 6 }}><input type="checkbox" checked={!!auto[flag]} onChange={(e) => setAuto({ ...auto, [flag]: e.target.checked })} /> {label}</label>
               ))}
             </div>
             <div className="muted" style={{ margin: '8px 0 4px' }}>{kind.sidesNote}</div>
             <div className="form-grid">
-              {LESS.map(([k, label]) => (
+              {LESS.filter(([k]) => amtShown(k)).map(([k, label]) => (
                 <Field key={k} label={label}><input data-nav="f" className="num" inputMode="decimal" value={amts[k] || ''} onChange={(e) => setAmts({ ...amts, [k]: e.target.value })} /></Field>
               ))}
-              <Field label="Others note"><input data-nav="f" value={othersAddStr} onChange={(e) => setAddStr(e.target.value)} /></Field>
-              <Field label="Others (taken off / added) note"><input data-nav="f" value={othersLessStr} onChange={(e) => setLessStr(e.target.value)} /></Field>
+              {amtShown('othersAddAmt') && <Field label="Others note"><input data-nav="f" value={othersAddStr} onChange={(e) => setAddStr(e.target.value)} /></Field>}
+              {amtShown('othersLessAmt') && <Field label="Others (taken off / added) note"><input data-nav="f" value={othersLessStr} onChange={(e) => setLessStr(e.target.value)} /></Field>}
             </div>
           </div>
           <div className="totals" style={{ flex: '1 1 300px' }}>
@@ -342,10 +367,10 @@ export default function BillEditor() {
             <div><span>Items total</span><span>{fmt(billAmt)}</span></div>
             <div><span>{kind.chargesSign === 1 ? 'Charges' : 'Deductions'}</span><span>{fmt(adds)}</span></div>
             <div><span>{kind.chargesSign === 1 ? 'Less' : 'Added'}</span><span>{fmt(less)}</span></div>
-            <div className="big"><span>Bill total</span><span>{fmt(gross)}</span></div>
-            {!kind.doc && <div><span>Previous balance</span><span>{fmt(prev)}</span></div>}
-            <div style={{ alignItems: 'center' }}><span>{kind.cash}</span><input id="cash-box" data-nav="f" className="num" style={{ width: 120 }} inputMode="decimal" value={cashAmt} onChange={(e) => setCash(e.target.value)} /></div>
-            <div className="big"><span>{kind.doc ? 'Net payable' : 'Net balance'}</span><span>{fmt(balance)}</span></div>
+            <div className="big"><span>Bill total</span><span className={type === 'B' ? 'due' : ''}>{fmt(gross)}</span></div>
+            {!kind.doc && <div><span>Previous balance</span><span className={type === 'B' && prev > 0 ? 'due' : ''}>{fmt(prev)}</span></div>}
+            <div style={{ alignItems: 'center' }}><span>{kind.cash}</span><input id="cash-box" data-nav="f" className={`num ${type === 'B' && cashEff > 0 ? 'got' : ''}`} style={{ width: 120 }} inputMode="decimal" disabled={credit} title={credit ? 'Credit bill: switch to Cash to enter an amount' : ''} value={cashShown} onChange={(e) => { setCash(e.target.value); setCashManual(true); }} /></div>
+            <div className="big"><span>{kind.doc ? 'Net payable' : 'Net balance'}</span><span className={type === 'B' && balance > 0 ? 'due' : ''}>{fmt(balance)}</span></div>
             <div className="muted" style={{ fontSize: '.8rem' }}>{rupeesInWords(gross)}</div>
           </div>
         </div>

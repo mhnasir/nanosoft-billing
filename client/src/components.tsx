@@ -1,5 +1,51 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { api, type Row } from './api';
+import { api, getAppName, getLogoOnPrint, getLogoUrl, type Row } from './api';
+
+/** The company / product name from Settings; the component re-renders when it changes. */
+export function useAppName() {
+  const [name, setName] = useState(getAppName());
+  useEffect(() => {
+    const h = () => setName(getAppName());
+    window.addEventListener('appname', h);
+    h();
+    return () => window.removeEventListener('appname', h);
+  }, []);
+  return name;
+}
+
+// Item pictures: one request fetches every picture ({ productKey: dataUrl }); screens share it and refresh when Products changes one.
+let pics: Record<number, string> | null = null;
+let picsLoading: Promise<void> | null = null;
+export function reloadProductImages() {
+  pics = null;
+  picsLoading = null;
+  window.dispatchEvent(new Event('prodimgs'));
+}
+export function useProductImages(): Record<number, string> {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const h = () => bump((n) => n + 1);
+    window.addEventListener('prodimgs', h);
+    if (!pics && !picsLoading) {
+      picsLoading = api.get('/product-images').then((r) => { pics = r; }, () => { pics = {}; }).finally(() => { picsLoading = null; bump((n) => n + 1); });
+    }
+    return () => window.removeEventListener('prodimgs', h);
+  });
+  return pics || {};
+}
+
+/** Company name + logo + whether the logo goes on printed bills; re-renders when Settings changes them. */
+export function useBrand() {
+  const read = () => ({ name: getAppName(), logo: getLogoUrl(), logoOnPrint: getLogoOnPrint() });
+  const [b, setB] = useState(read);
+  useEffect(() => {
+    const h = () => setB(read());
+    window.addEventListener('appname', h);
+    h();
+    return () => window.removeEventListener('appname', h);
+  }, []);
+  return b;
+}
 
 export function ErrorBox({ error }: { error: string }) {
   return error ? <div className="err" role="alert">{error}</div> : null;
@@ -48,8 +94,10 @@ export function useLoad<T = Row[]>(url: string | null, deps: unknown[] = []) {
 
 /** Searchable pick-list (works with touch): type to filter, tap an entry to choose. Resolves to a record id. */
 export function Picker({
-  options, value, onChange, labelOf, placeholder, id, onPick, inputId,
+  options, value, onChange, labelOf, placeholder, id, onPick, inputId, thumbOf,
 }: {
+  /** a small picture to show beside each option (an item's photo) */
+  thumbOf?: (r: Row) => string | undefined;
   options: Row[]; value: number; onChange: (id: number, row: Row | null) => void;
   labelOf: (r: Row) => string; placeholder?: string; id: string;
   /** called only when the user actually chooses a row (Enter or click), not while typing */
@@ -137,7 +185,7 @@ export function Picker({
               key={m.o.__id} role="option" aria-selected={m.o.__id === value} className={i === hi ? 'hi' : ''}
               onMouseDown={(e) => e.preventDefault()}
               onClick={(e) => { e.preventDefault(); choose(m.o); }}
-            >{m.l}</li>
+            >{thumbOf?.(m.o) ? <img className="opt-thumb" src={thumbOf(m.o)} alt="" /> : thumbOf ? <span className="opt-thumb blank" /> : null}{m.l}</li>
           ))}
           {!matches.length && <li className="none">No match</li>}
         </ul>

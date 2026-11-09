@@ -37,6 +37,7 @@ async function areaOf(req) {
   if (a === 'receipts') return 'receipts';
   if (a === 'reports') return b === 'dashboard' ? 'dashboard' : 'reports';
   if (a === 'users') return 'users';
+  if (a === 'settings') return req.method === 'GET' ? 'masters' : 'users'; // every screen reads them; only owner/admin change them
   if (MASTER_PATHS.has(a)) return 'masters';
   return 'masters';
 }

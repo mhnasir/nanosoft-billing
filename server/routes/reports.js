@@ -11,18 +11,22 @@ const BAL = `COALESCE(s.opnbal,0) + COALESCE((SELECT SUM(f.amount) FROM fatrans 
 /* ---------- dashboard ---------- */
 reportsRouter.get(
   '/dashboard',
-  wrap(async (_req, res) => {
+  wrap(async (req, res) => {
+    // The period shown: ?from=&to= (inclusive); no dates = today. Receivable / payable are always "as of now".
     const today = todayISO();
+    const from = req.query.from ? ymd(str(req.query.from, 10), 'from date') : today;
+    const to = req.query.to ? ymd(str(req.query.to, 10), 'to date') : from === today ? today : from;
+    if (from > to) throw badReq('The from date is after the to date');
     const [bills, rec, bal, recent] = await Promise.all([
       query(
         `SELECT b.billtype AS "BillType", COUNT(*)::int AS "Cnt", SUM(${GROSS}) AS "Total"
-         FROM bill01 b WHERE b.billtype IN ('B','S') AND b.billdate >= @d::date AND b.billdate < @d::date + 1 GROUP BY b.billtype`,
-        { d: today },
+         FROM bill01 b WHERE b.billtype IN ('B','S') AND b.billdate >= @f::date AND b.billdate < @t::date + 1 GROUP BY b.billtype`,
+        { f: from, t: to },
       ),
       query(
         `SELECT rectype AS "RecType", COUNT(*)::int AS "Cnt", SUM(amount) AS "Total" FROM recpay02
-         WHERE rectype IN ('R','P') AND recdate >= @d::date AND recdate < @d::date + 1 GROUP BY rectype`,
-        { d: today },
+         WHERE rectype IN ('R','P') AND recdate >= @f::date AND recdate < @t::date + 1 GROUP BY rectype`,
+        { f: from, t: to },
       ),
       query(
         `SELECT COALESCE(SUM(CASE WHEN b > 0 THEN b ELSE 0 END),0) AS "Receivable", COALESCE(SUM(CASE WHEN b < 0 THEN -b ELSE 0 END),0) AS "Payable"
@@ -31,10 +35,10 @@ reportsRouter.get(
       query(
         `SELECT b.billkey AS "BillKey", b.billno AS "BillNo", b.billdate AS "BillDate", b.billtype AS "BillType", s.supname AS "SupName", ${GROSS} AS "Gross"
          FROM bill01 b LEFT JOIN supmast s ON s.supkey=b.supkey WHERE b.billtype IN ('B','S')
-         ORDER BY b.billdate DESC, b.billkey DESC LIMIT 8`,
+         ORDER BY b.billdate DESC, b.billkey DESC LIMIT 8`, // the latest bills overall, whatever period the figures cover
       ),
     ]);
-    res.json({ today, bills, receipts: rec, receivable: bal[0]?.Receivable || 0, payable: bal[0]?.Payable || 0, recent });
+    res.json({ today, from, to, bills, receipts: rec, receivable: bal[0]?.Receivable || 0, payable: bal[0]?.Payable || 0, recent });
   }),
 );
 

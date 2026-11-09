@@ -70,7 +70,7 @@ export default function Receipts() {
             {(data || []).map((r) => (
               <tr key={r.Id}>
                 <td>{fdate(r.RecDate)}</td><td>{r.SupName}</td><td>{r.Mode}</td><td>{r.CreditNo}</td><td>{r.Narration}</td>
-                <td className="r">{r.LessAmt ? fmt(r.LessAmt) : ''}</td><td className="r">{fmt(r.Amount)}</td>
+                <td className="r">{r.LessAmt ? fmt(r.LessAmt) : ''}</td><td className={`r ${type === 'R' ? 'got' : ''}`}>{fmt(r.Amount)}</td>
                 <td className="r">
                   <button className="sm" onClick={() => { setMsg(''); setEdit(fromRow(r)); }}>Edit</button>{' '}
                   <button className="sm danger" onClick={() => remove(r)}>Delete</button>
@@ -79,7 +79,7 @@ export default function Receipts() {
             ))}
             {data && !data.length && <tr><td colSpan={8} className="muted">Nothing in this period.</td></tr>}
           </tbody>
-          {data && data.length > 0 && <tfoot><tr><td colSpan={6}>{data.length} entries</td><td className="r">{fmt(total)}</td><td /></tr></tfoot>}
+          {data && data.length > 0 && <tfoot><tr><td colSpan={6}>{data.length} entries</td><td className={`r ${type === 'R' ? 'got' : ''}`}>{fmt(total)}</td><td /></tr></tfoot>}
         </table>
       </div>
       {edit && (

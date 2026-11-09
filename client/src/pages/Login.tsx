@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { api, getApiBase, setApiBase, setToken, type Row } from '../api';
-import { ErrorBox, Field } from '../components';
+import { ErrorBox, Field, useBrand } from '../components';
 
 export default function Login({ onLogin }: { onLogin: (u: Row) => void }) {
   const [username, setU] = useState('');
   const [password, setP] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const { name: appName, logo } = useBrand();
   const [server, setServer] = useState(getApiBase());
   const hosted = !['localhost', '127.0.0.1'].includes(window.location.hostname) && !/^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname);
 
@@ -29,7 +30,7 @@ export default function Login({ onLogin }: { onLogin: (u: Row) => void }) {
   return (
     <div className="login">
       <form className="card" onSubmit={submit}>
-        <h1>NanoSoft Billing</h1>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{logo && <img className="brand-logo" src={logo} alt="" style={{ height: 40 }} />}{appName}</h1>
         <ErrorBox error={error} />
         <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
           {hosted && (

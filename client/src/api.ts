@@ -86,6 +86,32 @@ export const fdate = (s: unknown) => {
 };
 export const dateOnly = (s: unknown) => (typeof s === 'string' ? s.slice(0, 10) : '');
 
+// The company name and logo shown in the menu, the browser tab, the login page and (optionally) the printed bill. Set in Settings.
+const DEFAULT_NAME = 'NanoSoft Billing';
+const brand = { name: DEFAULT_NAME, logoVer: 0, logoOnPrint: true };
+export const getAppName = () => brand.name;
+/** Address of the logo picture ('' = no logo uploaded). The version changes on every upload, so a new logo shows at once. */
+export const getLogoUrl = () => (brand.logoVer ? `${getApiBase()}/api/auth/logo?v=${brand.logoVer}` : '');
+export const getLogoOnPrint = () => brand.logoOnPrint;
+export function setBrand(b: { appName?: unknown; logoVersion?: unknown; logoOnPrint?: unknown }) {
+  if (b.appName !== undefined) brand.name = String(b.appName ?? '').trim() || DEFAULT_NAME;
+  if (b.logoVersion !== undefined) brand.logoVer = Number(b.logoVersion) || 0;
+  if (b.logoOnPrint !== undefined) brand.logoOnPrint = b.logoOnPrint !== false;
+  try { document.title = brand.name; } catch { /* no document */ }
+  window.dispatchEvent(new Event('appname'));
+}
+export const setAppName = (v: unknown) => setBrand({ appName: v });
+
+/** Who is signed in (from the login token), used to keep per-user defaults in this browser. */
+export function userKey(): string {
+  try {
+    const p = JSON.parse(atob((getToken() || '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return String(p.name || p.id || '');
+  } catch {
+    return '';
+  }
+}
+
 export const todayISO = () => {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, '0');

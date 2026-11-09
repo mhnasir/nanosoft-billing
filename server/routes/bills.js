@@ -254,7 +254,7 @@ async function loadBill(id) {
             b.commissionamt AS "CommissionAmt", b.othersaddamt AS "OthersAddAmt", b.othersaddstr AS "OthersAddStr", b.cashamt AS "CashAmt",
             b.netamt AS "NetAmt", b.balamt AS "BalAmt", b.cooly AS "AutoCooly", b.basket AS "AutoBasket", b.gunny AS "AutoGunny", b.dctype AS "DcType", (b.nonbalancestat = 1) AS "NonBalance", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey", b.subbillkey AS "SubBillKey",
             ${GROSS} AS "Gross", s.supname AS "SupName", s.add1 AS "Add1", s.add2 AS "Add2", s.add3 AS "Add3", s.city AS "City",
-            s.pincode AS "Pincode", s.state AS "State", s.tngstno AS "TNGSTNO",
+            s.pincode AS "Pincode", s.state AS "State", s.tngstno AS "TNGSTNO", s.cstno AS "Mobile",
             (SELECT p.phone FROM phonemast p WHERE p.supkey=s.supkey ORDER BY p.ordkey LIMIT 1) AS "Phone"
      FROM bill01 b LEFT JOIN supmast s ON s.supkey=b.supkey WHERE b.billkey=@id AND b.billtype IN (${TYPE_SQL})`,
     { id },

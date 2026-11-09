@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { query } from './db.js';
 import { HttpError, wrap, str } from './util.js';
 import { permsOf, ROLES } from './access.js';
+import { getBrand, getLogo } from './routes/settings.js';
 
 let secret = process.env.JWT_SECRET;
 if (!secret) {
@@ -55,5 +56,16 @@ authRouter.post(
     res.json({ token, user: { ...user, perms: permsOf(user.role) } });
   }),
 );
+
+// Public: the login page shows the company name set in Settings.
+authRouter.get('/brand', wrap(async (_req, res) => res.json(await getBrand().catch(() => ({ appName: '', logoVersion: 0, logoOnPrint: true })))));
+
+// Public: the logo picture itself (the login page shows it before anyone signs in). Only validated PNG/JPG/GIF/WebP bytes are ever served.
+authRouter.get('/logo', wrap(async (_req, res) => {
+  const l = await getLogo().catch(() => null);
+  if (!l) return res.status(404).json({ error: 'No logo' });
+  res.set({ 'Content-Type': l.mime, 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+  res.send(l.buf);
+}));
 
 authRouter.get('/me', requireAuth, (req, res) => res.json({ user: { ...req.user, perms: permsOf(req.user.role) } }));

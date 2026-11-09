@@ -385,3 +385,145 @@ T('patiyal bill: a line is split among sub-customers (bill03) and editing keeps 
   assert.equal((await api('DELETE', `/api/bills/${id}`)).status, 200);
   assert.equal((await adminClient.query('SELECT COUNT(*)::int AS n FROM bill03 WHERE billkey=$1', [id])).rows[0].n, 0);
 });
+
+T('settings: bill-screen components can be switched off by an owner, read by everyone', async () => {
+  let r = await api('GET', '/api/settings/bill-fields');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.data, {}); // nothing hidden by default
+  r = await api('PUT', '/api/settings/bill-fields', { settings: { B: { hidden: ['kCoolyAmt', 'basketAmt', 'kCoolyAmt'] }, S: { hidden: [] } } });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  r = await api('GET', '/api/settings/bill-fields');
+  assert.deepEqual(r.data, { B: { hidden: ['kCoolyAmt', 'basketAmt'] }, S: { hidden: [] } }); // de-duplicated
+  assert.equal((await api('PUT', '/api/settings/bill-fields', { settings: { Z: { hidden: [] } } })).status, 400);
+  assert.equal((await api('PUT', '/api/settings/bill-fields', {})).status, 400);
+  // a manager can read but not change
+  await api('POST', '/api/users', { username: 'mgr2', password: 'pw12', role: 'manager' });
+  const l = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'mgr2', password: 'pw12' }) });
+  const mgr = (await l.json()).token;
+  const call = async (m, b) => (await fetch(`${base}/api/settings/bill-fields`, { method: m, headers: { Authorization: `Bearer ${mgr}`, 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : undefined })).status;
+  assert.equal(await call('GET'), 200);
+  assert.equal(await call('PUT', { settings: { B: { hidden: [] } } }), 403);
+});
+
+T('dashboard: takes a date range, defaults to today, rejects a backwards range', async () => {
+  let r = await api('GET', '/api/reports/dashboard?from=2026-07-01&to=2026-07-31');
+  assert.equal(r.status, 200);
+  assert.equal(r.data.from, '2026-07-01');
+  assert.equal(r.data.to, '2026-07-31');
+  const sales = r.data.bills.find((x) => x.BillType === 'B');
+  assert.ok(sales && sales.Cnt > 0, 'the July 2026 sales bills are counted');
+  r = await api('GET', '/api/reports/dashboard?from=2026-01-01&to=2026-01-31');
+  assert.equal(r.data.bills.length, 0);
+  r = await api('GET', '/api/reports/dashboard');
+  assert.equal(r.data.from, r.data.today);
+  assert.equal(r.data.to, r.data.today);
+  assert.equal((await api('GET', '/api/reports/dashboard?from=2026-08-01&to=2026-07-01')).status, 400);
+  assert.equal((await api('GET', '/api/reports/dashboard?from=junk')).status, 400);
+});
+
+T('company name setting: empty by default, public on the login page, only an owner changes it', async () => {
+  assert.deepEqual((await api('GET', '/api/settings/app')).data, { appName: '' });
+  const pub = await fetch(base + '/api/auth/brand'); // no login needed
+  assert.equal(pub.status, 200);
+  assert.equal((await pub.json()).appName, '');
+  let r = await api('PUT', '/api/settings/app', { appName: '  Sri Murugan Traders  ' });
+  assert.equal(r.status, 200);
+  assert.equal(r.data.appName, 'Sri Murugan Traders');
+  assert.equal((await (await fetch(base + '/api/auth/brand')).json()).appName, 'Sri Murugan Traders');
+  r = await api('PUT', '/api/settings/app', { appName: 'x'.repeat(200) });
+  assert.equal(r.data.appName.length, 60);
+  const l = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'mgr2', password: 'pw12' }) });
+  const mgr = (await l.json()).token;
+  const put = await fetch(`${base}/api/settings/app`, { method: 'PUT', headers: { Authorization: `Bearer ${mgr}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ appName: 'Hacked' }) });
+  assert.equal(put.status, 403);
+});
+
+T('print settings: paper, custom size, layout - validated and saved', async () => {
+  assert.deepEqual((await api('GET', '/api/settings/print')).data, {});
+  let r = await api('PUT', '/api/settings/print', { paper: 'Custom', width: 100, height: 150, orientation: 'landscape', margin: 5, fontSize: 11 });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.data, { paper: 'Custom', width: 100, height: 150, orientation: 'landscape', margin: 5, fontSize: 11 });
+  assert.deepEqual((await api('GET', '/api/settings/print')).data, r.data);
+  r = await api('PUT', '/api/settings/print', { paper: 'Banana', width: 5, height: 99999, orientation: 'sideways', margin: -3, fontSize: 'big' });
+  assert.equal(r.data.paper, 'A4'); // unknown paper falls back
+  assert.equal(r.data.width, 40); // clamped to the smallest allowed
+  assert.equal(r.data.height, 1500);
+  assert.equal(r.data.orientation, 'portrait');
+  assert.equal(r.data.margin, 0);
+  assert.equal(r.data.fontSize, 13); // not a number: default
+});
+
+T('menu layout setting: left by default, top when an owner chooses it, anyone may read it', async () => {
+  assert.deepEqual((await api('GET', '/api/settings/ui')).data, { menu: 'left' });
+  assert.deepEqual((await api('PUT', '/api/settings/ui', { menu: 'top' })).data, { menu: 'top' });
+  assert.deepEqual((await api('GET', '/api/settings/ui')).data, { menu: 'top' });
+  assert.deepEqual((await api('PUT', '/api/settings/ui', { menu: 'right' })).data, { menu: 'right' });
+  assert.equal((await api('PUT', '/api/settings/ui', { menu: 'sideways' })).data.menu, 'left'); // anything else means left
+  const l = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'mgr2', password: 'pw12' }) });
+  const mgr = (await l.json()).token;
+  const h = { Authorization: `Bearer ${mgr}`, 'Content-Type': 'application/json' };
+  assert.equal((await fetch(`${base}/api/settings/ui`, { headers: h })).status, 200);
+  assert.equal((await fetch(`${base}/api/settings/ui`, { method: 'PUT', headers: h, body: JSON.stringify({ menu: 'top' }) })).status, 403);
+});
+
+T('company logo: validated upload, public picture, print on/off, owner only', async () => {
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  assert.equal((await fetch(base + '/api/auth/logo')).status, 404); // none yet
+  let b = await (await fetch(base + '/api/auth/brand')).json();
+  assert.equal(b.logoVersion, 0);
+  assert.equal(b.logoOnPrint, true); // on the printed bill by default
+  let r = await api('PUT', '/api/settings/logo', { dataUrl: 'data:image/png;base64,' + PNG });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.ok(r.data.logoVersion > 0);
+  const img = await fetch(base + '/api/auth/logo'); // public, no login
+  assert.equal(img.status, 200);
+  assert.equal(img.headers.get('content-type'), 'image/png');
+  assert.deepEqual([...new Uint8Array(await img.arrayBuffer())], [...Buffer.from(PNG, 'base64')]);
+  // things that must be refused
+  assert.equal((await api('PUT', '/api/settings/logo', { dataUrl: 'data:text/html;base64,PGI+eDwvYj4=' })).status, 400);
+  assert.equal((await api('PUT', '/api/settings/logo', { dataUrl: 'data:image/png;base64,' + Buffer.from('this is not a png').toString('base64') })).status, 400);
+  assert.equal((await api('PUT', '/api/settings/logo', { dataUrl: 'data:image/png;base64,' + Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47]), Buffer.alloc(310 * 1024)]).toString('base64') })).status, 400);
+  assert.equal((await api('PUT', '/api/settings/logo', {})).status, 400);
+  // printed-bill option
+  r = await api('PUT', '/api/settings/logo-print', { on: false });
+  assert.equal(r.data.logoOnPrint, false);
+  assert.equal((await (await fetch(base + '/api/auth/brand')).json()).logoOnPrint, false);
+  assert.equal((await api('PUT', '/api/settings/logo-print', { on: true })).data.logoOnPrint, true);
+  // a manager cannot change it
+  const l = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'mgr2', password: 'pw12' }) });
+  const mgr = (await l.json()).token;
+  const h = { Authorization: `Bearer ${mgr}`, 'Content-Type': 'application/json' };
+  assert.equal((await fetch(`${base}/api/settings/logo`, { method: 'PUT', headers: h, body: JSON.stringify({ dataUrl: 'data:image/png;base64,' + PNG }) })).status, 403);
+  assert.equal((await fetch(`${base}/api/settings/logo`, { method: 'DELETE', headers: h })).status, 403);
+  // remove
+  r = await api('DELETE', '/api/settings/logo');
+  assert.equal(r.data.logoVersion, 0);
+  assert.equal((await fetch(base + '/api/auth/logo')).status, 404);
+});
+
+T('product pictures: validated upload per item, one request returns them all, delete', async () => {
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  let r = await api('GET', '/api/product-images');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.data, {});
+  r = await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  r = await api('GET', '/api/product-images');
+  assert.equal(r.data[ids.prod], 'data:image/png;base64,' + PNG); // round-trips byte for byte
+  // replacing keeps one picture per item
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG })).status, 200);
+  assert.equal((await adminClient.query('SELECT COUNT(*)::int AS n FROM productimage')).rows[0].n, 1);
+  // refused
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:text/html;base64,PGI+eDwvYj4=' })).status, 400);
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + Buffer.from('not a png').toString('base64') })).status, 400);
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(160 * 1024)]).toString('base64') })).status, 400);
+  assert.equal((await api('PUT', '/api/products/999999/image', { dataUrl: 'data:image/png;base64,' + PNG })).status, 404);
+  // a loading-staff login can read the pictures (it needs them in the sales screen) but not change them
+  await api('POST', '/api/users', { username: 'loader2', password: 'pw12', role: 'loading' });
+  const l = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'loader2', password: 'pw12' }) });
+  const h = { Authorization: `Bearer ${(await l.json()).token}`, 'Content-Type': 'application/json' };
+  assert.equal((await fetch(`${base}/api/product-images`, { headers: h })).status, 200);
+  assert.equal((await fetch(`${base}/api/products/${ids.prod}/image`, { method: 'PUT', headers: h, body: JSON.stringify({ dataUrl: 'data:image/png;base64,' + PNG }) })).status, 403);
+  assert.equal((await api('DELETE', `/api/products/${ids.prod}/image`)).status, 200);
+  assert.deepEqual((await api('GET', '/api/product-images')).data, {});
+});

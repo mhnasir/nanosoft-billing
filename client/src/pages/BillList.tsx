@@ -30,7 +30,7 @@ export default function BillList() {
   const total = (data || []).reduce((s, r) => s + Number(r.Gross), 0);
   return (
     <>
-      <div className="row" style={{ marginBottom: 12 }}>
+      <div className={`row tint ${["S", "F", "L", "C"].includes(type) ? "is-purchase" : "is-sales"}`} style={{ marginBottom: 12 }}>
         <h1 className="grow" style={{ margin: 0 }}>{BILL_TITLE[type]}</h1>
         <Link ref={newBtn} className="btn primary" to={`/bills/${type}/new`}>New {KIND[type]?.one || 'bill'}</Link>
       </div>
@@ -53,7 +53,10 @@ export default function BillList() {
                 <td>{r.BillNo}</td><td>{fdate(r.BillDate)}</td><td>{r.SupName}</td>
                 {KIND[type]?.chit
                   ? <><td>{r.LotNo}</td><td className="r">{Number(r.Bags) || ''}</td></>
-                  : <><td>{r.City}</td><td className="r">{fmt(r.Gross)}</td><td className="r">{fmt(r.CashAmt)}</td><td className="r">{fmt(r.NetAmt)}</td></>}
+                  : <><td>{r.City}</td>
+                      <td className={`r ${type === 'B' ? 'due' : ''}`}>{fmt(r.Gross)}</td>
+                      <td className={`r ${type === 'B' ? 'got' : ''}`}>{fmt(r.CashAmt)}</td>
+                      <td className={`r ${type === 'B' && Number(r.NetAmt) > 0 ? 'due' : ''}`}>{fmt(r.NetAmt)}</td></>}
               </tr>
             ))}
             {data && !data.length && <tr><td colSpan={7} className="muted">Nothing in this period.</td></tr>}

@@ -579,3 +579,9 @@ CREATE INDEX IF NOT EXISTS ix_recpay02_sup ON recpay02(supkey, recdate);
 CREATE INDEX IF NOT EXISTS ix_recpay02_key ON recpay02(recpaykey);
 CREATE INDEX IF NOT EXISTS ix_supmast_type ON supmast(suptype, stat);
 CREATE INDEX IF NOT EXISTS ix_phonemast_sup ON phonemast(supkey);
+
+-- app-wide settings (which bill-screen components are shown ...); also created on first use by the API
+CREATE TABLE IF NOT EXISTS appsetting (skey varchar(60) PRIMARY KEY, svalue text NOT NULL);
+
+-- a small picture per product, shown beside the item on the bill screens (never printed); also created on first use by the API
+CREATE TABLE IF NOT EXISTS productimage (prodkey integer PRIMARY KEY, mime varchar(20) NOT NULL, img bytea NOT NULL, updated bigint NOT NULL DEFAULT 0);

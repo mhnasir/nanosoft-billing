@@ -57,7 +57,7 @@ export default function Parties() {
             {(data || []).map((r) => (
               <tr key={r.SupKey}>
                 <td>{r.SupName}{r.Stat ? ' (inactive)' : ''}</td><td>{r.SupType}</td><td>{r.City}</td><td>{r.GroupName}</td><td>{r.Phone}</td>
-                <td className={`r ${r.Balance < 0 ? 'neg' : ''}`}>{fmt(r.Balance)}</td>
+                <td className={`r ${r.Balance > 0 ? 'due' : ''}`}>{fmt(r.Balance)}</td>
                 <td className="r">
                   <button className="sm" onClick={() => { setMsg(''); setEdit({ ...r }); }}>Edit</button>{' '}
                   <button className="sm danger" onClick={() => remove(r)}>Delete</button>
