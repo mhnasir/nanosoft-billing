@@ -77,7 +77,7 @@ reportsRouter.get(
   '/outstanding',
   wrap(async (req, res) => {
     const type = str(req.query.type, 1).toUpperCase() || 'C';
-    if (!['C', 'S', 'O', 'B'].includes(type)) throw badReq('Invalid party type');
+    if (!['C', 'S', 'O', 'B', 'H'].includes(type)) throw badReq('Invalid party type');
     const rows = await query(
       `SELECT * FROM (
          SELECT s.supkey AS "SupKey", s.supname AS "SupName", s.city AS "City", g.custtype AS "GroupName", ${BAL} AS "Balance",

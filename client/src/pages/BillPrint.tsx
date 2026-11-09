@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fdate, fmt, rupeesInWords } from '../api';
 import { AMT_COL, KIND } from '../billkinds';
@@ -44,34 +45,51 @@ export default function BillPrint() {
               {[b.City, b.Pincode].filter(Boolean).join(' - ')} {b.Phone ? `· ${b.Phone}` : ''}
             </div>
             <div style={{ textAlign: 'right' }}>
-              <b>{b.BillType === 'B' ? 'SALES BILL' : 'PURCHASE BILL'} No. {b.BillNo}</b><br />
+              <b>{b.BillType === 'B' ? 'SALES BILL' : b.BillType === 'S' ? 'PURCHASE BILL' : kind.one.toUpperCase()} No. {b.BillNo}</b><br />
               Date: {fdate(b.BillDate)}
               {b.LotNo ? <><br />Lot: {b.LotNo}</> : null}
             </div>
           </div>
           <table>
-            <thead><tr><th>#</th><th>Item</th><th className="r">Bags</th><th className="r">Weight</th><th>Unit</th><th className="r">Rate</th><th className="r">Amount</th></tr></thead>
+            <thead>
+              {kind.chit
+                ? <tr><th>#</th><th>Item</th><th className="r">Bags</th></tr>
+                : <tr><th>#</th><th>Item</th><th className="r">Bags</th><th className="r">Weight</th><th>Unit</th><th className="r">Rate</th><th className="r">Amount</th></tr>}
+            </thead>
             <tbody>
               {b.lines.map((l: any, i: number) => (
-                <tr key={l.Sal02Key}>
-                  <td>{i + 1}</td><td>{l.ProdName}{l.Marks ? ` [${l.Marks}]` : ''}</td>
-                  <td className="r">{Number(l.Nop) || ''}</td><td className="r">{Number(l.Qty)}</td><td>{l.Unit}</td>
-                  <td className="r">{fmt(l.Rate)}</td><td className="r">{fmt(l.Amount)}</td>
-                </tr>
+                <Fragment key={l.Sal02Key}>
+                  <tr>
+                    <td>{i + 1}</td><td>{l.ProdName}{l.Marks ? ` [${l.Marks}]` : ''}</td>
+                    <td className="r">{Number(l.Nop) || ''}</td>
+                    {!kind.chit && <><td className="r">{Number(l.Qty)}</td><td>{l.Unit}</td><td className="r">{fmt(l.Rate)}</td><td className="r">{fmt(l.Amount)}</td></>}
+                  </tr>
+                  {(l.Subs || []).map((s: any, j: number) => (
+                    <tr key={j} style={{ fontSize: '.88em' }}>
+                      <td />
+                      <td style={{ paddingLeft: 18 }}>– {s.SupName}</td>
+                      <td className="r">{Number(s.Nop) || ''}</td>
+                      <td className="r">{Number(s.Qty) || ''}</td><td />
+                      <td className="r">{fmt(s.Rate)}</td>
+                      <td className="r">{fmt(Math.round((l.Unit && /^kg/i.test(l.Unit) ? Number(s.Qty) : Number(s.Nop)) * Number(s.Rate)))}</td>
+                    </tr>
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           </table>
-          <div className="totals" style={{ marginTop: 10 }}>
+          {kind.chit && <div className="totals" style={{ marginTop: 10 }}><div className="big"><span>Total bags</span><span>{bags}</span></div></div>}
+          {!kind.chit && <div className="totals" style={{ marginTop: 10 }}>
             <div><span>Weight / bags</span><span>{weight} / {bags}</span></div>
             <div><span>Items total</span><span>{fmt(b.BillAmt)}</span></div>
             {charges.map(([k, v]) => <div key={k}><span>{sign[0]} {k}</span><span>{fmt(v)}</span></div>)}
             {deductions.map(([k, v]) => <div key={k}><span>{sign[1]} {k}</span><span>{fmt(v)}</span></div>)}
             <div className="big"><span>Bill total</span><span>{fmt(b.Gross)}</span></div>
-            {!b.NonBalance && <div><span>Previous balance</span><span>{fmt(num('BalAmt'))}</span></div>}
+            {!b.NonBalance && !kind.doc && <div><span>Previous balance</span><span>{fmt(num('BalAmt'))}</span></div>}
             {num('CashAmt') > 0 && <div><span>{kind.cash}</span><span>{fmt(b.CashAmt)}</span></div>}
-            <div className="big"><span>Net balance</span><span>{fmt(num('NetAmt'))}</span></div>
+            <div className="big"><span>{kind.doc ? 'Net payable' : 'Net balance'}</span><span>{fmt(num('NetAmt'))}</span></div>
             <div style={{ fontSize: '.85rem' }}>{rupeesInWords(b.Gross)}</div>
-          </div>
+          </div>}
         </div>
       )}
     </>

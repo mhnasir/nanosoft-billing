@@ -84,6 +84,12 @@ export default function App() {
         {can('purchase') && link('/bills/S', 'Purchase bills')}
         {can('receipts') && link('/receipts/R', 'Receipts')}
         {can('receipts') && link('/receipts/P', 'Payments')}
+        {(can('sales') || can('purchase')) && <div className="grp">Delivery &amp; patti</div>}
+        {can('sales') && link('/bills/D', 'Delivery chits')}
+        {can('sales') && link('/bills/O', 'Orders')}
+        {can('purchase') && link('/bills/F', 'Farmer commission bills')}
+        {can('purchase') && link('/bills/L', 'Patiyal bills (credit)')}
+        {can('purchase') && link('/bills/C', 'Cash patiyal')}
         {can('reports') && <div className="grp">Reports</div>}
         {can('reports') && link('/ledger', 'Party ledger')}
         {can('reports') && link('/outstanding', 'Outstanding')}

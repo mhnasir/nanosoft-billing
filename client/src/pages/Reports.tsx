@@ -55,7 +55,7 @@ export function Outstanding() {
     <>
       <h1>Outstanding</h1>
       <div className="tabs noprint">
-        {[['C', 'Customers'], ['S', 'Suppliers'], ['O', 'Others'], ['B', 'Branches']].map(([k, l]) => <button key={k} className={type === k ? 'on' : ''} onClick={() => setType(k)}>{l}</button>)}
+        {[['C', 'Customers'], ['S', 'Suppliers'], ['O', 'Others'], ['B', 'Branches'], ['H', 'Legacy (H)']].map(([k, l]) => <button key={k} className={type === k ? 'on' : ''} onClick={() => setType(k)}>{l}</button>)}
         <button onClick={() => window.print()}>Print</button>
       </div>
       <ErrorBox error={error} />

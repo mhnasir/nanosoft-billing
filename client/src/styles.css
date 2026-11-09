@@ -30,7 +30,7 @@ h2 { font-size: 1.05rem; margin: 0 0 10px; }
 .row > * { flex: 0 0 auto; }
 .grow { flex: 1 1 200px !important; }
 label.f { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); }
-input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-width: 0; }
+input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 7px 9px; min-width: 0; }
 input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
 input.num { text-align: right; width: 100%; }
 
@@ -160,3 +160,61 @@ tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
   body { background: #fff; }
   .print-sheet { border: 0; padding: 0; max-width: none; }
 }
+
+/* bag weights popup */
+.bw-grid { max-height: 52vh; overflow: auto; }
+.modal:has(.bw-grid) { width: min(290px, 100%); }
+.modal:has(.bw-grid) input.num { font-size: 1.3rem; font-weight: 600; }
+.bw-no { text-align: center; color: var(--muted); }
+.bw-total { align-items: center; }
+.weight-cell { display: flex; }
+.weight-cell input { flex: 1; min-width: 0; }
+
+/* spreadsheet look: gridlines, square cells, the active cell outlined (desktop only; phones keep the card layout) */
+@media screen and (min-width: 801px) {
+  .tablewrap table, table.sheet { border-collapse: collapse; }
+  .tablewrap th, .tablewrap td, table.sheet th, table.sheet td { border: 1px solid var(--line); padding: 5px 8px; }
+  .tablewrap th, table.sheet th { background: color-mix(in srgb, var(--line) 60%, var(--panel)); color: var(--ink); text-transform: none; letter-spacing: 0; font-size: .82rem; }
+  .tablewrap tbody tr:nth-child(even) td, table.sheet tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--bg) 70%, var(--panel)); }
+  tr.click:hover td { background: var(--brand-soft) !important; }
+  table.sheet td:has(> input), table.sheet td:has(> select), table.sheet td:has(> .weight-cell) { padding: 0; }
+  table.sheet td > input, table.sheet td > select, table.sheet .weight-cell input {
+    width: 100%; border: 0; border-radius: 0; background: transparent; padding: 6px 8px; height: 100%; min-height: 32px;
+  }
+  table.sheet td > input:focus, table.sheet td > select:focus, table.sheet .weight-cell input:focus { outline: 2px solid var(--brand); outline-offset: -2px; background: var(--panel); }
+  table.sheet .weight-cell button { border: 0; border-left: 1px solid var(--line); border-radius: 0; }
+  table.sheet td.c-no { text-align: center; background: color-mix(in srgb, var(--line) 60%, var(--panel)) !important; }
+}
+
+/* Bill screen on a desktop monitor: everything fits on one screen like the VB form.
+   Header on top, the item grid takes the remaining height and scrolls inside itself, charges + totals + buttons stay at the bottom. */
+@media screen and (min-width: 801px) and (min-height: 560px) {
+  .main:has(.bill-screen) { padding: 8px 14px; }
+  .bill-screen { height: calc(100vh - 16px); height: calc(100dvh - 16px); display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  .bill-screen > * { flex: none; margin: 0 !important; }
+  .bill-screen .card { padding: 6px 10px; margin: 0; }
+  .bill-screen .bs-title { display: flex; align-items: center; margin: 0 !important; }
+  .bill-screen h1 { font-size: 1.05rem; }
+  .bill-screen .bs-title .btn { padding: 3px 10px; }
+  .bill-screen input, .bill-screen select { padding: 4px 7px; font-size: 14px; }
+  .bill-screen label.f { font-size: .7rem; gap: 2px; }
+  .bill-screen .bs-lines { flex: 1 1 auto; min-height: 120px; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; }
+  .bill-screen .bs-lines .tablewrap { flex: 1 1 auto; min-height: 0; max-height: none; overflow: auto; }
+  .bill-screen .bs-bar { padding: 4px 10px !important; }
+  .bill-screen .bs-foot { padding: 4px 10px !important; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); font-size: .78rem; }
+  .bill-screen .bs-foot button { padding: 2px 10px; }
+  .bill-screen table.lines th, .bill-screen table.lines td { padding-top: 0; padding-bottom: 0; }
+  .bill-screen table.lines td:not(:has(> input, > select, > .weight-cell)) { padding: 3px 8px; }
+  .bill-screen table.lines td > input, .bill-screen table.lines td > select, .bill-screen table.lines .weight-cell input { min-height: 28px; padding: 3px 6px; }
+  .bill-screen .bs-bottom .form-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 4px 8px; }
+  .bill-screen .bs-bottom .row { gap: 8px; }
+  .bill-screen .bs-bottom .totals { width: min(300px, 100%); font-size: 13px; }
+  .bill-screen .bs-bottom .totals div { padding: 1px 0; }
+  .bill-screen .bs-bottom .totals .big { font-size: 1rem; margin-top: 3px; padding-top: 4px; }
+  .bill-screen .bs-bottom .totals input { width: 110px !important; }
+  .bill-screen .bs-bottom .muted { font-size: .75rem; }
+  .bill-screen .bs-actions { position: static; margin: 0 !important; padding: 4px 0 0; border: 0; background: transparent; }
+  .bill-screen .bs-actions button { flex: none; padding: 5px 18px; }
+}
+.modal:has(.sp-grid) { width: min(760px, 100%); }
+.sp-grid table td > input, .sp-grid table td > .picker-wrap input { width: 100%; }

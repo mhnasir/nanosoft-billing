@@ -120,13 +120,13 @@ mastersRouter.get(
 );
 
 /* ---------- parties (supmast): C customer, S supplier/farmer, O others, B branch ---------- */
-const PARTY_TYPES = ['C', 'S', 'O', 'B'];
+const PARTY_TYPES = ['C', 'S', 'O', 'B', 'H']; // H = type used by the imported legacy data
 
 const PARTY_SELECT = `
   SELECT s.supkey AS "SupKey", s.supcode AS "SupCode", s.supname AS "SupName", s.add1 AS "Add1", s.add2 AS "Add2", s.add3 AS "Add3",
          s.city AS "City", s.pincode AS "Pincode", s.state AS "State", s.email AS "Email", s.tngstno AS "TNGSTNO",
-         s.suptype AS "SupType", s.custkey AS "CustKey", g.custtype AS "GroupName",
-         COALESCE(s.opnbal,0) AS "OpnBal",
+         s.suptype AS "SupType", s.custkey AS "CustKey", s.showcharges AS "ShowCharges", g.custtype AS "GroupName",
+         COALESCE(s.opnbal,0) AS "OpnBal", s.stat AS "Stat",
          COALESCE(s.opnbal,0) + COALESCE((SELECT SUM(f.amount) FROM fatrans f WHERE f.supkey=s.supkey),0) AS "Balance",
          (SELECT p.phone FROM phonemast p WHERE p.supkey=s.supkey ORDER BY p.ordkey LIMIT 1) AS "Phone"
   FROM supmast s LEFT JOIN custtypemast g ON g.custkey = s.custkey`;
@@ -136,7 +136,7 @@ mastersRouter.get(
   wrap(async (req, res) => {
     const type = str(req.query.type, 1).toUpperCase();
     const q = str(req.query.q, 60);
-    const where = ['s.stat = 0'];
+    const where = req.query.inactive === '1' ? [] : ['s.stat = 0'];
     const p = {};
     if (type) {
       if (!PARTY_TYPES.includes(type)) throw badReq('Invalid party type');
@@ -148,7 +148,7 @@ mastersRouter.get(
       p.q = `%${q}%`;
     }
     p.lim = Math.min(int(req.query.limit, 500) || 500, 2000);
-    res.json(await query(`${PARTY_SELECT} WHERE ${where.join(' AND ')} ORDER BY s.supname LIMIT @lim`, p));
+    res.json(await query(`${PARTY_SELECT} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY s.supname LIMIT @lim`, p));
   }),
 );
 
@@ -170,6 +170,7 @@ function partyBody(b) {
     supcode: str(b.SupCode, 50), supname: name, add1: str(b.Add1, 100) || '-', add2: str(b.Add2, 100), add3: str(b.Add3, 100),
     city: str(b.City, 40), pincode: str(b.Pincode, 8), state: str(b.State, 40), email: str(b.Email, 100), tngstno: str(b.TNGSTNO, 50),
     suptype: type, custkey: int(b.CustKey), opnbal: num(b.OpnBal),
+    showcharges: b.ShowCharges === 0 || b.ShowCharges === false || b.ShowCharges === '0' ? 0 : 1,
   };
 }
 

@@ -309,3 +309,79 @@ T('DRY_RUN rolls bill writes back', async () => {
     delete process.env.DRY_RUN;
   }
 });
+
+T('delivery chit and order: bags only, numbered per type, never touch the ledger', async () => {
+  const chit = (o = {}) => ({ billType: 'D', supKey: ids.cust, billDate: '2026-07-14', lotNo: 'MN', lines: [{ prodKey: ids.prod, nop: 3 }, { prodKey: ids.prod, nop: 0.5, marks: 'AA' }], ...o });
+  const before = await adminClient.query('SELECT COUNT(*)::int AS n FROM fatrans');
+  let r = await api('POST', '/api/bills', chit());
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  assert.equal(r.data.billNo, 1);
+  const first = r.data.billKey;
+  assert.equal((await api('POST', '/api/bills', chit())).data.billNo, 2);
+  r = await api('GET', `/api/bills/${first}`);
+  assert.equal(r.data.BillType.trim(), 'D');
+  assert.equal(r.data.Gross, 0);
+  assert.equal(r.data.InOutPur, '3.5');
+  assert.equal(r.data.LotNo, 'MN');
+  assert.equal(r.data.lines.length, 2);
+  r = await api('GET', '/api/bills?type=D');
+  assert.equal(r.data.length, 2);
+  assert.equal(r.data[0].Bags, '3.5');
+  // an order shares the sales-bill number counter (as in the VB MaxValueBillNo)
+  const sales = await adminClient.query("SELECT MAX(billno)::int AS m FROM bill01 WHERE billtype IN ('B','O')");
+  r = await api('POST', '/api/bills', chit({ billType: 'O' }));
+  assert.equal(r.data.billNo, sales.rows[0].m + 1);
+  const after = await adminClient.query('SELECT COUNT(*)::int AS n FROM fatrans');
+  assert.equal(after.rows[0].n, before.rows[0].n); // no ledger rows
+  assert.equal((await api('POST', '/api/bills', chit({ lines: [{ prodKey: ids.prod }] }))).status, 400);
+  assert.equal((await api('DELETE', `/api/bills/${first}`)).status, 200);
+});
+
+T('farmer commission bill links to its purchase bill and posts nothing', async () => {
+  let r = await api('POST', '/api/bills', { billType: 'S', supKey: ids.sup, billDate: '2026-07-14', lotNo: 'LOT9', lines: [{ prodKey: ids.prod, qty: 100, rate: 10, nop: 2 }] });
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  const chitta = r.data.billKey;
+  const ledgerBefore = await adminClient.query('SELECT balanceamt FROM supmast WHERE supkey=$1', [ids.sup]);
+  r = await api('POST', '/api/bills', {
+    billType: 'F', supKey: ids.sup, billDate: '2026-07-14', refBillKey: chitta, commissionAmt: 100, coolyAmt: 20, cashAmt: 300,
+    lines: [{ prodKey: ids.prod, qty: 100, rate: 20, nop: 2, unit: 'Kgs' }],
+  });
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  const f = r.data.billKey;
+  r = await api('GET', `/api/bills/${f}`);
+  assert.equal(r.data.Gross, 1880); // 2000 - 100 - 20
+  assert.equal(r.data.NetAmt, 1580); // gross - cash paid, no previous balance on a document
+  assert.equal(r.data.RefBillKey, chitta);
+  const link = await adminClient.query('SELECT subbillkey FROM bill01 WHERE billkey=$1', [chitta]);
+  assert.equal(link.rows[0].subbillkey, f);
+  const ledgerAfter = await adminClient.query('SELECT balanceamt FROM supmast WHERE supkey=$1', [ids.sup]);
+  assert.equal(ledgerAfter.rows[0].balanceamt, ledgerBefore.rows[0].balanceamt);
+  r = await api('GET', '/api/bills?type=F');
+  assert.equal(r.data[0].Gross, 1880);
+  // deleting the commission bill frees the purchase bill again
+  assert.equal((await api('DELETE', `/api/bills/${f}`)).status, 200);
+  const unlinked = await adminClient.query('SELECT subbillkey FROM bill01 WHERE billkey=$1', [chitta]);
+  assert.equal(unlinked.rows[0].subbillkey, 0);
+});
+
+T('patiyal bill: a line is split among sub-customers (bill03) and editing keeps them', async () => {
+  const body = (subs) => ({
+    billType: 'L', supKey: ids.sup, billDate: '2026-07-14', lotNo: 'P1', commissionAmt: 50,
+    lines: [{ prodKey: ids.prod, unit: 'Kgs', subs }],
+  });
+  let r = await api('POST', '/api/bills', body([{ supKey: ids.cust, nop: 2, qty: 100, rate: 20 }, { supKey: ids.cust, nop: 1, qty: 40, rate: 25 }]));
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  const id = r.data.billKey;
+  r = await api('GET', `/api/bills/${id}`);
+  assert.equal(r.data.Gross, 2950); // 3000 - 50 commission
+  assert.equal(r.data.lines[0].Qty, 140);
+  assert.equal(r.data.lines[0].Subs.length, 2);
+  assert.equal(r.data.lines[0].Subs[0].SupName, 'Ravi Traders');
+  assert.equal((await adminClient.query('SELECT COUNT(*)::int AS n FROM bill03 WHERE billkey=$1', [id])).rows[0].n, 2);
+  r = await api('PUT', `/api/bills/${id}`, body([{ supKey: ids.cust, nop: 1, qty: 10, rate: 30 }]));
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal((await adminClient.query('SELECT COUNT(*)::int AS n FROM bill03 WHERE billkey=$1', [id])).rows[0].n, 1);
+  assert.equal((await api('GET', `/api/bills/${id}`)).data.Gross, 250); // 300 - 50
+  assert.equal((await api('DELETE', `/api/bills/${id}`)).status, 200);
+  assert.equal((await adminClient.query('SELECT COUNT(*)::int AS n FROM bill03 WHERE billkey=$1', [id])).rows[0].n, 0);
+});

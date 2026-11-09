@@ -77,3 +77,39 @@ test('purchase bill: charges are deducted from the farmer, added amounts are add
   // we already owed this farmer 800 (stored negative): 4600 + 800 - 1000
   assert.equal(computeTotals(p, -800).netAmt, 4400);
 });
+
+test('delivery chit (D) and order (O) carry bags only: no rate, no money', () => {
+  const b = parseBill({ billType: 'D', supKey: 2, billDate: '2026-07-13', lotNo: 'MN', lines: [{ prodKey: 7, nop: 3 }, { prodKey: 15, nop: 0.5, marks: 'AA' }] });
+  assert.equal(b.billAmt, 0);
+  assert.equal(b.gross, 0);
+  assert.equal(b.netAmt, 0);
+  assert.equal(b.inOutPur, '3.5'); // total bags
+  assert.deepEqual(b.lines.map((l) => [l.rate, l.amount, l.unit]), [[0, 0, 'Nop'], [0, 0, 'Nop']]);
+  assert.throws(() => parseBill({ billType: 'D', supKey: 2, billDate: '2026-07-13', lines: [{ prodKey: 7 }] }), /bags/i);
+});
+
+test('farmer commission bill (F): charges are deducted like a purchase bill and no previous balance is shown', () => {
+  const b = parseBill({ billType: 'F', supKey: 9, billDate: '2026-07-13', commissionAmt: 100, coolyAmt: 20, kCoolyAmt: 30, lines: [{ prodKey: 1, qty: 100, rate: 20, nop: 2, unit: 'Kgs' }], cashAmt: 500, refBillKey: 44 });
+  assert.equal(b.billAmt, 2000);
+  assert.equal(b.gross, 1850); // 2000 - 100 - 20 - 30
+  computeTotals(b, 777); // a ledger balance is passed but documents ignore it
+  assert.equal(b.prevBal, 0);
+  assert.equal(b.netAmt, 1350); // gross - cash paid
+  assert.equal(b.refBillKey, 44);
+});
+
+test('patiyal (L/C): a line split among sub-customers adds up its parts, each with its own rate', () => {
+  const b = parseBill({
+    billType: 'L', supKey: 9, billDate: '2026-07-13', commissionAmt: 50,
+    lines: [{ prodKey: 1, unit: 'Kgs', subs: [{ supKey: 3, nop: 2, qty: 100, rate: 20 }, { supKey: 4, nop: 1, qty: 40, rate: 25 }] }],
+  });
+  const l = b.lines[0];
+  assert.equal(l.amount, 3000); // 100x20 + 40x25
+  assert.equal(l.qty, 140);
+  assert.equal(l.nop, 3);
+  assert.equal(l.rate, 21.43); // average, 3000 / 140
+  assert.equal(b.gross, 2950);
+  assert.equal(l.subs.length, 2);
+  assert.throws(() => parseBill({ billType: 'C', supKey: 9, billDate: '2026-07-13', lines: [{ prodKey: 1, unit: 'Kgs', subs: [{ supKey: 0, qty: 5, rate: 1 }] }] }), /customer/i);
+  assert.throws(() => parseBill({ billType: 'C', supKey: 9, billDate: '2026-07-13', lines: [{ prodKey: 1, unit: 'Kgs', subs: [{ supKey: 3, qty: 0, rate: 1 }] }] }), /weight/i);
+});

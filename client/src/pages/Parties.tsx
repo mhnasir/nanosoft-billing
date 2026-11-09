@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { api, fmt, qs, type Row } from '../api';
 import { ErrorBox, Field, Modal, useLoad } from '../components';
 
-const TYPES: [string, string][] = [['C', 'Customers'], ['S', 'Suppliers'], ['O', 'Others'], ['B', 'Branches']];
+const TYPES: [string, string][] = [['', 'All'], ['C', 'Customers'], ['S', 'Suppliers'], ['O', 'Others'], ['B', 'Branches'], ['H', 'Legacy (H)']];
 
 export default function Parties() {
-  const [type, setType] = useState('C');
+  const [type, setType] = useState('');
+  const [inactive, setInactive] = useState(false);
   const [q, setQ] = useState('');
-  const { data, error, reload } = useLoad<Row[]>(`/parties${qs({ type, q })}`);
+  const { data, error, reload } = useLoad<Row[]>(`/parties${qs({ type, q, inactive: inactive ? '1' : '' })}`);
   const groups = useLoad<Row[]>('/groups');
   const [edit, setEdit] = useState<Row | null>(null);
   const [msg, setMsg] = useState('');
@@ -40,19 +41,22 @@ export default function Parties() {
       <div className="row" style={{ marginBottom: 12 }}>
         <h1 className="grow" style={{ margin: 0 }}>Customers / suppliers</h1>
         <input placeholder="Search name or city…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button className="primary" onClick={() => { setMsg(''); setEdit({ SupType: type, CustKey: 0, OpnBal: 0 }); }}>Add</button>
+        <button className="primary" onClick={() => { setMsg(''); setEdit({ SupType: type || 'C', CustKey: 0, OpnBal: 0, ShowCharges: 1 }); }}>Add</button>
       </div>
       <div className="tabs">
         {TYPES.map(([k, l]) => <button key={k} className={type === k ? 'on' : ''} onClick={() => setType(k)}>{l}</button>)}
       </div>
+      <label className="row" style={{ marginBottom: 8 }}>
+        <input type="checkbox" checked={inactive} onChange={(e) => setInactive(e.target.checked)} /> Show inactive
+      </label>
       <ErrorBox error={error || (!edit ? msg : '')} />
       <div className="tablewrap">
         <table className="stack">
-          <thead><tr><th>Name</th><th>City</th><th>Group</th><th>Phone</th><th className="r">Balance</th><th /></tr></thead>
+          <thead><tr><th>Name</th><th>Type</th><th>City</th><th>Group</th><th>Phone</th><th className="r">Balance</th><th /></tr></thead>
           <tbody>
             {(data || []).map((r) => (
               <tr key={r.SupKey}>
-                <td>{r.SupName}</td><td>{r.City}</td><td>{r.GroupName}</td><td>{r.Phone}</td>
+                <td>{r.SupName}{r.Stat ? ' (inactive)' : ''}</td><td>{r.SupType}</td><td>{r.City}</td><td>{r.GroupName}</td><td>{r.Phone}</td>
                 <td className={`r ${r.Balance < 0 ? 'neg' : ''}`}>{fmt(r.Balance)}</td>
                 <td className="r">
                   <button className="sm" onClick={() => { setMsg(''); setEdit({ ...r }); }}>Edit</button>{' '}
@@ -60,7 +64,7 @@ export default function Parties() {
                 </td>
               </tr>
             ))}
-            {data && !data.length && <tr><td colSpan={6} className="muted">Nothing found.</td></tr>}
+            {data && !data.length && <tr><td colSpan={7} className="muted">Nothing found.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -71,7 +75,7 @@ export default function Parties() {
             <Field label="Name *"><input value={edit.SupName ?? ''} onChange={(e) => set('SupName', e.target.value)} /></Field>
             <Field label="Type">
               <select value={edit.SupType} onChange={(e) => set('SupType', e.target.value)}>
-                {TYPES.map(([k, l]) => <option key={k} value={k}>{l.replace(/s$/, '')}</option>)}
+                {TYPES.filter(([k]) => k).map(([k, l]) => <option key={k} value={k}>{l.replace(/s$/, '')}</option>)}
               </select>
             </Field>
             <Field label="Group">
@@ -89,6 +93,12 @@ export default function Parties() {
             <Field label="Pincode"><input value={edit.Pincode ?? ''} onChange={(e) => set('Pincode', e.target.value)} /></Field>
             <Field label="Email"><input value={edit.Email ?? ''} onChange={(e) => set('Email', e.target.value)} /></Field>
             <Field label="GST no"><input value={edit.TNGSTNO ?? ''} onChange={(e) => set('TNGSTNO', e.target.value)} /></Field>
+            <Field label="Charges on bill screen">
+              <label className="row" style={{ gap: 6, alignItems: 'center' }}>
+                <input type="checkbox" checked={edit.ShowCharges !== 0} onChange={(e) => set('ShowCharges', e.target.checked ? 1 : 0)} />
+                {edit.ShowCharges !== 0 ? 'Show (commission, cooly ...)' : 'Hidden'}
+              </label>
+            </Field>
             <Field label="Opening balance (+ owes us / − we owe)">
               <input type="number" step="0.01" value={edit.OpnBal ?? 0} onChange={(e) => set('OpnBal', e.target.value)} />
             </Field>

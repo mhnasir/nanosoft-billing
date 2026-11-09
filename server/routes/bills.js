@@ -6,7 +6,13 @@ import { GROSS } from '../gross.js';
 export const billsRouter = Router();
 
 // B = customer bill (debits the party in the ledger), S = supplier/farmer bill (credits the party).
-const TYPES = ['B', 'S'];
+// The others are documents that are saved like bills but - as in the VB InsUp_Bill01 procedure - do not post to the ledger:
+//   D delivery chit, O order (items and bags only), F farmer commission bill, L credit patiyal, C cash patiyal.
+export const TYPES = ['B', 'S', 'D', 'O', 'F', 'L', 'C'];
+export const POSTS = new Set(['B', 'S']); // types that post to the ledger
+const NO_AMOUNTS = new Set(['D', 'O']); // chits: no weights, rates or money
+const SPLIT = new Set(['L', 'C']); // lines can be split among sub-customers (Bill03)
+const TYPE_SQL = TYPES.map((t) => `'${t}'`).join(',');
 
 // The old app's Format(x, "00"): whole rupees, halves round away from zero.
 const whole = (x) => Math.sign(x) * Math.round(Math.abs(x));
@@ -21,6 +27,10 @@ const CHARGE_KEYS = ['advAmt', 'coolyAmt', 'kCoolyAmt', 'basketAmt', 'gunnyAmt',
  * are added and the charges (commission, cooly, lorry hire, gunny, advance ...) are deducted from the farmer.
  */
 export function computeTotals(b, prevBal = 0) {
+  if (NO_AMOUNTS.has(b.billType)) {
+    Object.assign(b, { billAmt: 0, gross: 0, prevBal: 0, netAmt: 0 });
+    return b;
+  }
   b.billAmt = r2(b.lines.reduce((s, l) => s + l.amount, 0));
   const charges = CHARGE_KEYS.reduce((s, k) => s + b[k], 0);
   const sideAmts = b.disAmt + b.othersLessAmt;
@@ -28,7 +38,7 @@ export function computeTotals(b, prevBal = 0) {
   // What the printed bill shows as the amount to settle: previous balance and this bill, less cash. For a supplier the
   // balance is stored negative when we owe them, so it is subtracted (same as the VB form).
   // A "non-balance" bill (VB NonBalanceStat) shows no previous balance: it stands alone on the printout.
-  const pb = b.nonBalance ? 0 : prevBal;
+  const pb = b.nonBalance || !POSTS.has(b.billType) ? 0 : prevBal; // documents show no previous balance
   b.prevBal = r2(pb);
   b.netAmt = r2(b.billType === 'B' ? pb + b.gross - b.cashAmt : b.gross - pb - b.cashAmt);
   return b;
@@ -36,7 +46,7 @@ export function computeTotals(b, prevBal = 0) {
 
 export function parseBill(body) {
   const billType = str(body.billType, 1).toUpperCase();
-  if (!TYPES.includes(billType)) throw badReq('billType must be B or S');
+  if (!TYPES.includes(billType)) throw badReq(`billType must be one of ${TYPES.join(', ')}`);
   const supKey = int(body.supKey);
   if (!supKey) throw badReq('Select a party');
   const billDate = ymd(str(body.billDate, 10), 'bill date');
@@ -49,15 +59,35 @@ export function parseBill(body) {
     const qty = num(l.qty);
     const rate = num(l.rate);
     const nop = num(l.nop);
-    const unit = str(l.unit, 10) || 'Kgs';
+    const unit = str(l.unit, 10) || (NO_AMOUNTS.has(billType) ? 'Nop' : 'Kgs');
     if (!prodKey) throw badReq(`Line ${i + 1}: select an item`);
+    if (NO_AMOUNTS.has(billType)) {
+      // chits carry bags (and optionally a weight) only
+      if (nop <= 0 && qty <= 0) throw badReq(`Line ${i + 1}: enter the number of bags`);
+      return { prodKey, qty, rate: 0, nop, unit, marks: str(l.marks, 50), weightTxt: '', amount: 0, ord: i + 1, subs: [] };
+    }
+    if (SPLIT.has(billType) && Array.isArray(l.subs) && l.subs.length) {
+      // patiyal line split among sub-customers: the line is the sum of its parts (each part has its own rate)
+      if (l.subs.length > 100) throw badReq(`Line ${i + 1}: too many sub-customers (max 100)`);
+      const subs = l.subs.map((s, j) => {
+        const sNop = num(s.nop), sQty = num(s.qty), sRate = num(s.rate);
+        if (!int(s.supKey)) throw badReq(`Line ${i + 1}, part ${j + 1}: select the customer`);
+        if (sRate < 0) throw badReq(`Line ${i + 1}, part ${j + 1}: rate cannot be negative`);
+        if (isKgs(unit) ? sQty === 0 : sNop === 0) throw badReq(`Line ${i + 1}, part ${j + 1}: enter the ${isKgs(unit) ? 'weight' : 'bags'}`);
+        return { supKey: int(s.supKey), nop: sNop, qty: sQty, rate: sRate, remarks: str(s.remarks, 50), amount: whole(isKgs(unit) ? sQty * sRate : sNop * sRate) };
+      });
+      const amount = subs.reduce((s, x) => s + x.amount, 0);
+      const tQty = r2(subs.reduce((s, x) => s + x.qty, 0)), tNop = r2(subs.reduce((s, x) => s + x.nop, 0));
+      const base = isKgs(unit) ? tQty : tNop;
+      return { prodKey, qty: tQty, rate: base ? r2(amount / base) : 0, nop: tNop, unit, marks: str(l.marks, 50), weightTxt: '', amount, ord: i + 1, subs };
+    }
     // Same rule as the VB grid: Kgs items are weight x rate, every other unit (Nop ...) is number of bags x rate.
     if (isKgs(unit) && qty === 0) throw badReq(`Line ${i + 1}: quantity must not be 0`);
     if (!isKgs(unit) && nop === 0) throw badReq(`Line ${i + 1}: enter the number of bags (Nop)`);
     if (rate < 0) throw badReq(`Line ${i + 1}: rate cannot be negative`);
     return {
       prodKey, qty, rate, nop, unit, marks: str(l.marks, 50),
-      weightTxt: str(l.weightTxt, 250), amount: whole(isKgs(unit) ? qty * rate : nop * rate), ord: i + 1,
+      weightTxt: str(l.weightTxt, 250), amount: whole(isKgs(unit) ? qty * rate : nop * rate), ord: i + 1, subs: [],
     };
   });
 
@@ -76,6 +106,7 @@ export function parseBill(body) {
     nop: txt(lines.reduce((s, l) => s + l.qty, 0)),
     inOutPur: txt(lines.reduce((s, l) => s + l.nop, 0)),
     billNo: body.billNo ? int(body.billNo) : 0,
+    refBillKey: billType === 'F' ? int(body.refBillKey) : 0, // the purchase bill (chitta) a farmer commission bill belongs to
   };
   computeTotals(b);
   if (b.gross < 0) throw badReq('Total cannot be negative');
@@ -107,9 +138,11 @@ async function applyAuto(db, b) {
 /** Same rules as the VB MaxValueBillNo: sales bills (B/O) keep counting for ever, purchase bills (S) restart every day. */
 async function nextBillNo(db, billType, dateISO) {
   const r =
-    billType === 'B'
+    billType === 'B' || billType === 'O'
       ? await db.query("SELECT MAX(billno) AS m FROM bill01 WHERE billtype IN ('B','O')")
-      : await db.query("SELECT MAX(billno) AS m FROM bill01 WHERE billtype='S' AND billdate >= @d::date AND billdate < @d::date + 1", { d: dateISO });
+      : billType === 'S'
+        ? await db.query("SELECT MAX(billno) AS m FROM bill01 WHERE billtype='S' AND billdate >= @d::date AND billdate < @d::date + 1", { d: dateISO })
+        : await db.query('SELECT MAX(billno) AS m FROM bill01 WHERE billtype=@t', { t: billType }); // D, F, L, C: a running number per type
   return (r[0]?.m || 0) + 1;
 }
 
@@ -141,11 +174,25 @@ function headerValues(b, billNo) {
 
 async function insertLines(db, billKey, b) {
   for (const l of b.lines) {
-    await db.query(
+    const ins = await db.query(
       `INSERT INTO bill02(billkey,prodkey,qty,unit,nop,rate,amount,ordkey,weighttxt,bsupkey,ordqty,lssupkey,billdate,lessstat,inout,marks,lotkey,markskey,prate,pratetot)
-       VALUES(@billkey,@prodkey,@qty,@unit,@nop,@rate,@amount,@ordkey,@weighttxt,0,@nop,0,@billdate,0,'0',@marks,0,0,0,0)`,
+       VALUES(@billkey,@prodkey,@qty,@unit,@nop,@rate,@amount,@ordkey,@weighttxt,0,@nop,0,@billdate,0,'0',@marks,0,0,0,0) RETURNING sal02key`,
       { billkey: billKey, prodkey: l.prodKey, qty: l.qty, unit: l.unit, nop: l.nop, rate: l.rate, amount: l.amount, ordkey: l.ord, weighttxt: l.weightTxt, billdate: b.billDate, marks: l.marks },
     );
+    for (const [j, s] of (l.subs || []).entries()) {
+      await db.query(
+        `INSERT INTO bill03(billkey,bill02key,lssupkey,supkey,nop,qty,rate,remarks,ordkey,keybillkey) VALUES(@b,@l,0,@s,@nop,@qty,@rate,@rem,@ord,0)`,
+        { b: billKey, l: ins[0].sal02key, s: s.supKey, nop: s.nop, qty: s.qty, rate: s.rate, rem: s.remarks, ord: j + 1 },
+      );
+    }
+  }
+}
+
+/** A farmer commission bill points at the purchase bill (chitta) it settles: that bill's SubBillKey holds the commission bill's key (as in VB). */
+async function linkChitta(db, b, billKey) {
+  await db.query("UPDATE bill01 SET subbillkey=0 WHERE billtype='S' AND subbillkey=@k", { k: billKey });
+  if (b.billType === 'F' && b.refBillKey) {
+    await db.query("UPDATE bill01 SET subbillkey=@k WHERE billkey=@r AND billtype='S'", { k: billKey, r: b.refBillKey });
   }
 }
 
@@ -158,7 +205,7 @@ async function assertParty(db, supKey) {
 billsRouter.get(
   '/',
   wrap(async (req, res) => {
-    const where = ["b.billtype IN ('B','S')"];
+    const where = [`b.billtype IN (${TYPE_SQL})`];
     const p = {};
     const type = str(req.query.type, 1).toUpperCase();
     if (type) {
@@ -178,7 +225,8 @@ billsRouter.get(
     res.json(
       await query(
         `SELECT b.billkey AS "BillKey", b.billno AS "BillNo", b.billdate AS "BillDate", b.billtype AS "BillType", b.supkey AS "SupKey",
-                s.supname AS "SupName", s.city AS "City", ${GROSS} AS "Gross", COALESCE(b.cashamt,0) AS "CashAmt", COALESCE(b.netamt,0) AS "NetAmt"
+                s.supname AS "SupName", s.city AS "City", ${GROSS} AS "Gross", COALESCE(b.cashamt,0) AS "CashAmt", COALESCE(b.netamt,0) AS "NetAmt",
+                b.lotno AS "LotNo", b.inoutpur AS "Bags"
          FROM bill01 b LEFT JOIN supmast s ON s.supkey=b.supkey
          WHERE ${where.join(' AND ')}
          ORDER BY b.billdate DESC, b.billno DESC, b.billkey DESC LIMIT 500`,
@@ -204,11 +252,11 @@ async function loadBill(id) {
             b.billamt AS "BillAmt", b.disamt AS "DisAmt", b.otherslessamt AS "OthersLessAmt", b.otherslessstr AS "OthersLessStr",
             b.advamt AS "AdvAmt", b.coolyamt AS "CoolyAmt", b.kcoolyamt AS "KCoolyAmt", b.basketamt AS "BasketAmt", b.gunnyamt AS "GunnyAmt",
             b.commissionamt AS "CommissionAmt", b.othersaddamt AS "OthersAddAmt", b.othersaddstr AS "OthersAddStr", b.cashamt AS "CashAmt",
-            b.netamt AS "NetAmt", b.balamt AS "BalAmt", b.cooly AS "AutoCooly", b.basket AS "AutoBasket", b.gunny AS "AutoGunny", b.dctype AS "DcType", (b.nonbalancestat = 1) AS "NonBalance", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey",
+            b.netamt AS "NetAmt", b.balamt AS "BalAmt", b.cooly AS "AutoCooly", b.basket AS "AutoBasket", b.gunny AS "AutoGunny", b.dctype AS "DcType", (b.nonbalancestat = 1) AS "NonBalance", b.lotno AS "LotNo", b.inoutpur AS "InOutPur", b.nop AS "Nop", b.fatranskey AS "FatransKey", b.subbillkey AS "SubBillKey",
             ${GROSS} AS "Gross", s.supname AS "SupName", s.add1 AS "Add1", s.add2 AS "Add2", s.add3 AS "Add3", s.city AS "City",
             s.pincode AS "Pincode", s.state AS "State", s.tngstno AS "TNGSTNO",
             (SELECT p.phone FROM phonemast p WHERE p.supkey=s.supkey ORDER BY p.ordkey LIMIT 1) AS "Phone"
-     FROM bill01 b LEFT JOIN supmast s ON s.supkey=b.supkey WHERE b.billkey=@id AND b.billtype IN ('B','S')`,
+     FROM bill01 b LEFT JOIN supmast s ON s.supkey=b.supkey WHERE b.billkey=@id AND b.billtype IN (${TYPE_SQL})`,
     { id },
   );
   if (!h[0]) return null;
@@ -219,7 +267,20 @@ async function loadBill(id) {
      FROM bill02 l LEFT JOIN productmast p ON p.prodkey=l.prodkey WHERE l.billkey=@id ORDER BY l.ordkey, l.sal02key`,
     { id },
   );
-  return { ...h[0], lines };
+  if (SPLIT.has(h[0].BillType)) {
+    const subs = await query(
+      `SELECT t.bill02key AS "Bill02Key", t.supkey AS "SupKey", s.supname AS "SupName", t.nop AS "Nop", t.qty AS "Qty", t.rate AS "Rate", t.remarks AS "Remarks"
+       FROM bill03 t LEFT JOIN supmast s ON s.supkey=t.supkey WHERE t.billkey=@id ORDER BY t.bill02key, t.ordkey`,
+      { id },
+    );
+    for (const l of lines) l.Subs = subs.filter((x) => x.Bill02Key === l.Sal02Key);
+  }
+  let refBillKey = 0;
+  if (h[0].BillType === 'F') {
+    const r = await query("SELECT billkey FROM bill01 WHERE billtype='S' AND subbillkey=@id LIMIT 1", { id });
+    refBillKey = r[0]?.billkey || 0;
+  }
+  return { ...h[0], lines, RefBillKey: refBillKey };
 }
 
 billsRouter.get(
@@ -240,22 +301,26 @@ billsRouter.post(
       await assertParty(db, b.supKey);
       const billNo = b.billNo || (await nextBillNo(db, b.billType, b.billDate));
       await applyAuto(db, b);
-      computeTotals(b, await balanceBefore(db, b.supKey, 0));
+      computeTotals(b, POSTS.has(b.billType) ? await balanceBefore(db, b.supKey, 0) : 0);
       if (b.gross < 0) throw badReq('Total cannot be negative');
       const hv = headerValues(b, billNo);
       const cols = HEADER_COLS.split(',').map((c) => c.trim());
       const ins = await db.query(`INSERT INTO bill01(${cols.join(',')}) VALUES(${cols.map((c) => '@' + c).join(',')}) RETURNING billkey`, hv);
       const billKey = ins[0].billkey;
-      // Ledger posting (what InsUp_Bill01 did): B debits the party, S credits it.
-      const sign = b.billType === 'B' ? 1 : -1;
-      const f = await db.query(
-        `INSERT INTO fatrans(docno,docdate,doctype,supkey,amount,refkey,transdate,less)
-         VALUES(@docno,@d,@t,@s,@amt,@ref,now(),@less) RETURNING fatranskey`,
-        { docno: String(billNo), d: b.billDate, t: b.billType, s: b.supKey, amt: sign * b.gross, ref: billKey, less: b.cashAmt },
-      );
-      await db.query('UPDATE bill01 SET fatranskey=@f, btob=@n WHERE billkey=@b', { f: f[0].fatranskey, b: billKey, n: b.nonBalance ? 1 : 0 });
+      if (POSTS.has(b.billType)) {
+        // Ledger posting (what InsUp_Bill01 did): B debits the party, S credits it.
+        const sign = b.billType === 'B' ? 1 : -1;
+        const f = await db.query(
+          `INSERT INTO fatrans(docno,docdate,doctype,supkey,amount,refkey,transdate,less)
+           VALUES(@docno,@d,@t,@s,@amt,@ref,now(),@less) RETURNING fatranskey`,
+          { docno: String(billNo), d: b.billDate, t: b.billType, s: b.supKey, amt: sign * b.gross, ref: billKey, less: b.cashAmt },
+        );
+        await db.query('UPDATE bill01 SET fatranskey=@f WHERE billkey=@b', { f: f[0].fatranskey, b: billKey });
+      }
+      await db.query('UPDATE bill01 SET btob=@n WHERE billkey=@b', { b: billKey, n: b.nonBalance ? 1 : 0 });
       await insertLines(db, billKey, b);
-      await refreshBalance(db, b.supKey);
+      await linkChitta(db, b, billKey);
+      if (POSTS.has(b.billType)) await refreshBalance(db, b.supKey);
       return { billKey, billNo };
     });
     res.status(201).json(out);
@@ -275,7 +340,7 @@ billsRouter.put(
       await assertParty(db, b.supKey);
       const billNo = b.billNo || cur[0].billno;
       await applyAuto(db, b);
-      computeTotals(b, await balanceBefore(db, b.supKey, cur[0].fatranskey));
+      computeTotals(b, POSTS.has(b.billType) ? await balanceBefore(db, b.supKey, cur[0].fatranskey) : 0);
       if (b.gross < 0) throw badReq('Total cannot be negative');
       const hv = headerValues(b, billNo);
       // Flags this screen does not edit (multi-cash, transport) stay as they were.
@@ -283,7 +348,9 @@ billsRouter.put(
       const cols = HEADER_COLS.split(',').map((c) => c.trim()).filter((c) => !KEEP.includes(c));
       await db.query(`UPDATE bill01 SET ${cols.map((c) => `${c}=@${c}`).join(',')} WHERE billkey=@id`, { ...hv, id });
       const sign = b.billType === 'B' ? 1 : -1;
-      if (cur[0].fatranskey) {
+      if (!POSTS.has(b.billType)) {
+        // documents have no ledger entry
+      } else if (cur[0].fatranskey) {
         await db.query(
           'UPDATE fatrans SET amount=@amt, less=@less, supkey=@s, docno=@docno, docdate=@d WHERE fatranskey=@f',
           { amt: sign * b.gross, less: b.cashAmt, s: b.supKey, docno: String(billNo), d: b.billDate, f: cur[0].fatranskey },
@@ -296,10 +363,14 @@ billsRouter.put(
         await db.query('UPDATE bill01 SET fatranskey=@f WHERE billkey=@id', { f: f[0].fatranskey, id });
       }
       await db.query('UPDATE bill01 SET btob=@n WHERE billkey=@id', { id, n: b.nonBalance ? 1 : 0 });
+      await db.query('DELETE FROM bill03 WHERE billkey=@id', { id });
       await db.query('DELETE FROM bill02 WHERE billkey=@id', { id });
       await insertLines(db, id, b);
-      await refreshBalance(db, b.supKey);
-      if (cur[0].supkey !== b.supKey) await refreshBalance(db, cur[0].supkey);
+      await linkChitta(db, b, id);
+      if (POSTS.has(b.billType)) {
+        await refreshBalance(db, b.supKey);
+        if (cur[0].supkey !== b.supKey) await refreshBalance(db, cur[0].supkey);
+      }
       return { billKey: id, billNo };
     });
     res.json(out);
@@ -317,10 +388,11 @@ billsRouter.delete(
       const settled = await db.query('SELECT COUNT(*)::int AS c FROM recpay02 WHERE billkey=@id', { id });
       if (settled[0].c > 0) throw new HttpError(409, 'Cannot delete: receipts/payments are linked to this bill');
       if (cur[0].fatranskey) await db.query('DELETE FROM fatrans WHERE fatranskey=@f', { f: cur[0].fatranskey });
+      await db.query("UPDATE bill01 SET subbillkey=0 WHERE billtype='S' AND subbillkey=@id", { id });
       await db.query('DELETE FROM bill03 WHERE billkey=@id', { id });
       await db.query('DELETE FROM bill02 WHERE billkey=@id', { id });
       await db.query('DELETE FROM bill01 WHERE billkey=@id', { id });
-      await refreshBalance(db, cur[0].supkey);
+      if (POSTS.has(cur[0].billtype)) await refreshBalance(db, cur[0].supkey);
     });
     res.json({ ok: true });
   }),

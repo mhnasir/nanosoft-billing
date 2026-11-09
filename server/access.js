@@ -32,7 +32,7 @@ async function areaOf(req) {
       const r = await query('SELECT billtype FROM bill01 WHERE billkey=@id', { id: int(b) });
       t = (r[0]?.billtype || '').trim();
     }
-    return t === 'S' ? 'purchase' : 'sales';
+    return ['S', 'F', 'L', 'C'].includes(t) ? 'purchase' : 'sales'; // farmer-side documents follow purchase rights
   }
   if (a === 'receipts') return 'receipts';
   if (a === 'reports') return b === 'dashboard' ? 'dashboard' : 'reports';

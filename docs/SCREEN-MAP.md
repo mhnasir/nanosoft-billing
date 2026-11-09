@@ -20,10 +20,13 @@ Target: this project, on PostgreSQL. The old data is copied once from `NVS2026` 
 | Day book | DAILYCASHBILL, reports | read-only |
 | Trial balance | TrialBalance | read-only, by party group |
 | Bill print | BillRpt*.Dsr | browser print / Save as PDF |
+| Delivery chit (type D), Order (type O) | SalesBill (D/O), loading chits | bags only, no amounts; a document - no ledger posting. Orders share the sales bill number counter |
+| Farmer commission bill (type F) | FormerComBill | purchase-style statement with COM %, cooly, gunny, lorry hire; points at the purchase bill (chitta) through `SubBillKey`; a document - no ledger posting |
+| Patiyal bill (type L), Cash patiyal (type C) | PattiyalBillnew, CashPatiyal, Patiyal | each line is split among sub-customers (`Bill03`: bags, weight, own rate); COM %; a document - no ledger posting |
 
 ## Not migrated yet (suggested order)
 
-1. **Patti / commission bills** (Patiyal, PattiyalBill*, FormerComBill, CashPatiyal, CommissionBill) - bill types `L`, `Y`, `C`, `O`, `T`; uses `Bill03`, `Former01/02`.
+1. **Patti follow-ups** (first version built, to be corrected against the client's real workflow): types `P`, `Y`, `T` and the `CommissionBill` form are not built; `PatiyalToSales` (turn a patti into sales bills) is not built; patti / farmer bills do not post to the farmer's ledger (the VB `InsUp_Bill01` only posts types B and S) - decide with the client whether they should; COM % is not stored on the bill (only the resulting commission amount); the print layouts are plain.
 2. **Stock** (Stock, StockLedger, StockDetails, TallyStockSheet, RetailsTally, LotProfitLess) - `StockLedger`, `ProductStock`.
 3. **Order bills** (OrderBill, OrderWeight, OuterBill) - `OrderBill*`.
 4. **Bank / cash book** (BankBill, RptBankFrm, BusinessFlow, PLFRM, BalanceSheet).

@@ -48,10 +48,14 @@ export function useLoad<T = Row[]>(url: string | null, deps: unknown[] = []) {
 
 /** Searchable pick-list (works with touch): type to filter, tap an entry to choose. Resolves to a record id. */
 export function Picker({
-  options, value, onChange, labelOf, placeholder, id,
+  options, value, onChange, labelOf, placeholder, id, onPick, inputId,
 }: {
   options: Row[]; value: number; onChange: (id: number, row: Row | null) => void;
   labelOf: (r: Row) => string; placeholder?: string; id: string;
+  /** called only when the user actually chooses a row (Enter or click), not while typing */
+  onPick?: (row: Row) => void;
+  /** DOM id of the text box, so a screen can move the focus here from the keyboard */
+  inputId?: string;
 }) {
   const current = options.find((o) => o.__id === value);
   const [text, setText] = useState(current ? labelOf(current) : '');
@@ -99,6 +103,7 @@ export function Picker({
   const choose = (o: Row) => {
     setText(labelOf(o));
     onChange(o.__id, o);
+    onPick?.(o);
     setOpen(false);
     setHi(-1);
     ref.current?.blur();
@@ -107,7 +112,7 @@ export function Picker({
   return (
     <>
       <input
-        ref={ref} value={text} placeholder={placeholder} autoComplete="off" role="combobox" aria-expanded={open} aria-controls={id}
+        ref={ref} id={inputId} value={text} placeholder={placeholder} autoComplete="off" role="combobox" aria-expanded={open} aria-controls={id}
         onFocus={(e) => { setOpen(true); setHi(-1); e.target.select(); }}
         onBlur={() => setOpen(false)}
         onChange={(e) => {
@@ -121,7 +126,7 @@ export function Picker({
           if (!open) return;
           if (e.key === 'ArrowDown') { e.preventDefault(); setHi((h) => Math.min(matches.length - 1, h + 1)); }
           else if (e.key === 'ArrowUp') { e.preventDefault(); setHi((h) => Math.max(0, h - 1)); }
-          else if (e.key === 'Enter' && hi >= 0 && matches[hi]) { e.preventDefault(); choose(matches[hi].o); }
+          else if (e.key === 'Enter' && matches.length && (hi >= 0 || text.trim())) { e.preventDefault(); choose(matches[Math.max(hi, 0)].o); } // Enter takes the highlighted row, else the first match (as the VB list did)
           else if (e.key === 'Escape') setOpen(false);
         }}
       />
