@@ -527,3 +527,29 @@ T('product pictures: validated upload per item, one request returns them all, de
   assert.equal((await api('DELETE', `/api/products/${ids.prod}/image`)).status, 200);
   assert.deepEqual((await api('GET', '/api/product-images')).data, {});
 });
+
+T('product picture editor: the larger original is kept for re-cropping', async () => {
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const jpeg = (n, fill = 0x11) => Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(n, fill)]);
+  assert.equal((await api('GET', `/api/products/${ids.prod}/image-source`)).status, 404); // no picture yet
+  const orig = jpeg(2000);
+  let r = await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG, source: 'data:image/jpeg;base64,' + orig.toString('base64') });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  r = await api('GET', `/api/products/${ids.prod}/image-source`);
+  assert.equal(r.data.original, true);
+  assert.equal(r.data.dataUrl, 'data:image/jpeg;base64,' + orig.toString('base64'));
+  // saving a new crop without sending the original keeps the original
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG })).status, 200);
+  assert.equal((await api('GET', `/api/products/${ids.prod}/image-source`)).data.dataUrl, 'data:image/jpeg;base64,' + orig.toString('base64'));
+  // bad originals are refused
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG, source: 'data:image/png;base64,' + PNG })).status, 400);
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG, source: 'data:image/jpeg;base64,' + Buffer.from('not a jpeg').toString('base64') })).status, 400);
+  assert.equal((await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG, source: 'data:image/jpeg;base64,' + jpeg(420 * 1024).toString('base64') })).status, 400);
+  // without an original the editor still gets the small picture to start from
+  await api('DELETE', `/api/products/${ids.prod}/image`);
+  await api('PUT', `/api/products/${ids.prod}/image`, { dataUrl: 'data:image/png;base64,' + PNG });
+  r = await api('GET', `/api/products/${ids.prod}/image-source`);
+  assert.equal(r.data.original, false);
+  assert.equal(r.data.dataUrl, 'data:image/png;base64,' + PNG);
+  await api('DELETE', `/api/products/${ids.prod}/image`);
+});

@@ -585,3 +585,4 @@ CREATE TABLE IF NOT EXISTS appsetting (skey varchar(60) PRIMARY KEY, svalue text
 
 -- a small picture per product, shown beside the item on the bill screens (never printed); also created on first use by the API
 CREATE TABLE IF NOT EXISTS productimage (prodkey integer PRIMARY KEY, mime varchar(20) NOT NULL, img bytea NOT NULL, updated bigint NOT NULL DEFAULT 0);
+ALTER TABLE productimage ADD COLUMN IF NOT EXISTS src bytea;

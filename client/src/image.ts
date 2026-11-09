@@ -20,3 +20,26 @@ export async function squareThumb(file: File, size = 160): Promise<string> {
   bmp.close?.();
   return c.toDataURL('image/jpeg', 0.82);
 }
+
+/** Shrink a picture so its longest side is at most `max` px and return it as a JPEG data URL. This is the "original" kept for re-cropping later. */
+export async function shrinkToJpeg(file: Blob, max = 640): Promise<string> {
+  let bmp: ImageBitmap;
+  try {
+    bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    throw new Error('That file could not be read as a picture');
+  }
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const w = Math.max(1, Math.round(bmp.width * k));
+  const h = Math.max(1, Math.round(bmp.height * k));
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  if (!ctx) throw new Error('This browser cannot resize pictures');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(bmp, 0, 0, w, h);
+  bmp.close?.();
+  return c.toDataURL('image/jpeg', 0.85);
+}

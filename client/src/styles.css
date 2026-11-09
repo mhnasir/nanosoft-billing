@@ -339,3 +339,5 @@ table.lines td.c-pic { text-align: center; padding: 2px 4px; }
   .opt-thumb { width: 44px; height: 44px; }
 }
 @media print { .line-thumb, .row-thumb, .opt-thumb { display: none !important; } }
+.zoomable { cursor: zoom-in; }
+.zoomable:hover { outline: 2px solid var(--brand); }
